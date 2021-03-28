@@ -1,28 +1,35 @@
 #####################
 # torchtyping is designed to be highly extensible.
-#####################
-
-from __future__ import annotations
-
-import torch
-from torchtyping import TensorType
-import typeguard
-
-from typing import Any, Tuple
-
-
-#####################
-# It's possible to check any other property of a tensor, as well as just the defaults.
 #
-# Here we check that the tensor has an attribute called "foo" on it, which should
-# take a particular value.
+# Extensions are performed by subclassing TensorType, and overriding its `check` and
+# `getitem` methods.
+#
+# `check` performs the instance check, if this is an instance is of this class. It
+# should return a bool for whether the check passes.
+#
+# `getitem` specifies how the [] notation should update the attributes of the class. It
+# should return a dictionary, whose keys correspond to the attributes to update, and
+# whose values correspond to the values those attributes should take. A subclass will be
+# created with those attributes.
+#
+# Here's an example extending TensorType to check that the passed tensor has an extra
+# attribute `foo` whose value must be the string "good-foo".
 #####################
-class TensorTypeFooChecker(TensorType):
-    foo = None
-    
-    @classmethod
-    def fields(cls) -> Tuple[str]:
-        return super().fields() + ('foo',)
+
+from torch import rand, tensor
+from torchtyping import TensorType
+from typeguard import typechecked
+
+from typing import Any, Dict, Optional
+
+
+class FooType:
+    def __init__(self, value):
+        self.value = value
+
+
+class FooTensorType(TensorType):
+    foo: Optional[str] = None
     
     @classmethod
     def check(cls, instance: Any) -> bool:
@@ -32,29 +39,31 @@ class TensorTypeFooChecker(TensorType):
         return check
         
     @classmethod
-    def getitem(cls, item: Any) -> TensorTypeFooChecker:
-        foo = cls.foo
-        if isinstance(item, slice):
-            if item.start == "foo":
-                foo = item.stop
-                item = None
-        dict = super().getitem(item)
-        dict.update(foo=foo)
-        return dict
+    def getitem(cls, item: Any) -> Dict[str, Any]
+        if isinstance(item, FooType):
+            return {"foo": item.value}
+        else:
+            return super().getitem(item)
 
 
-@typeguard.typechecked
-def foo_checker(tensor: TensorTypeFooChecker["foo":"good-foo"][float]):
+@typechecked
+def foo_checker(tensor: FooTensorType[float][FooType("good-foo")]):
     pass
-    
+
     
 def valid_foo():
-    x = torch.rand(3)
+    x = rand(3)
     x.foo = "good-foo"
+    foo_checker(x)
+
+
+def invalid_foo_one():
+    x = rand(3)
+    x.foo = "bad-foo"
     foo_checker(x)
     
     
-def invalid_foo():
-    x = torch.rand(3)
-    x.foo = "bad-foo"
+def invalid_foo_two():
+    x = tensor([1, 2])  # integer type
+    x.foo = "good-foo"
     foo_checker(x)
