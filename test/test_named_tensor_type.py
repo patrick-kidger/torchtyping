@@ -45,17 +45,24 @@ def _named_m1bm1_dim_checker(x: NamedTensorType[-1, "b", -1]):
 
 
 def test_named_str_dim():
-    x = torch.rand(3, 4):
+    x = torch.rand(3, 4)
     named_x = torch.rand(3, 4, names=("a", "b"))
     
     with pytest.raises(TypeError):
         _named_ab_dim_checker(x)
+    with pytest.raises(TypeError):
         _named_cb_dim_checker(x)
+    with pytest.raises(TypeError):
         _named_am1_dim_checker(x)
+    with pytest.raises(TypeError):
         _named_m1b_dim_checker(x)
+    with pytest.raises(TypeError):
         _named_a_dim_checker(x)
+    with pytest.raises(TypeError):
         _named_abc_dim_checker(x)
+    with pytest.raises(TypeError):
         _named_abm1_dim_checker(x)
+    with pytest.raises(TypeError):
         _named_m1bm1_dim_checker(x)
 
     _named_ab_dim_checker(named_x)
@@ -63,7 +70,11 @@ def test_named_str_dim():
     _named_m1b_dim_checker(named_x)
     with pytest.raises(TypeError):
         _named_a_dim_checker(named_x)
+    with pytest.raises(TypeError):
         _named_abc_dim_checker(named_x)
+    with pytest.raises(TypeError):
         _named_cb_dim_checker(named_x)
+    with pytest.raises(TypeError):
         _named_abm1_dim_checker(named_x)
+    with pytest.raises(TypeError):
         _named_m1bm1_dim_checker(named_x)

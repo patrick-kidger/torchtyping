@@ -29,21 +29,36 @@ Bye-bye bugs!
 pip install git+https://github.com/patrick-kidger/torchtyping.git
 ```
 
+```python
+from torchtyping import TensorType
+```
+
+Requires Python 3.8+.
+
 ## Details
 
-torchtyping allows for more precisely specifying the details of tensor arguments as part of a type annotation:
+If (like me) you find yourself littering your code with comments like `# x has shape (batch, hidden_state)` just to keep track of what shape everything is, then this is for you.
+
+`torchtyping` allows for more precisely specifying the details of tensor arguments as part of a type annotation:
+
 - shape: size, number of dimensions
 - dtype (float, integer, etc.)
 - layout (dense, sparse)
 - names of dimensions as per [named tensors](https://pytorch.org/docs/stable/named_tensor.html).
 - use `...` to indicate an arbitrary number of batch dimensions
-- ...plus anything else you like, as torchtyping is highly extensible.
+- ...plus anything else you like, as `torchtyping` is highly extensible.
 
-If [typeguard](https://github.com/agronholm/typeguard) is installed (and being used) then **at runtime the types will be checked** to ensure that the tensors really are of the advertised shape, dtype, etc. (If you're not already using typeguard for your regular Python programming, then strongly consider using it. It's a great way to squash bugs.)
+## Runtime Type Checking
 
-In the example above, then `x`, `y`, and the return value, are all checked to see that their first dimensions (`"batch"`) are the same size as each other. Likewise the `"x_channels"`, `"y_channels"` dimensions are checked against each other.
+If [typeguard](https://github.com/agronholm/typeguard) is installed (and being used) then **at runtime the types will be checked** to ensure that the tensors really are of the advertised shape, dtype, etc.
 
-_Note that to get the programmatic checking, then typeguard must be installed, and activated for the specified functions in its usual way. torchtyping can be used without typeguard -- to clearly document the expected shape, dtype etc. of the the tensors -- but is a lot less useful overall._
+In the example above, then `x`, `y`, and the `return` value, are all checked to see that their first dimensions (`"batch"`) are the same size as each other. Likewise the `"x_channels"`, `"y_channels"` dimensions are all checked against each other.
+
+If you're not already using typeguard for your regular Python programming, then strongly consider using it. It's a great way to squash bugs. Both it and `torchtyping` automatically integrate with pytest, so if you're concerned about the performance penalty then they can be enabled during tests only.
+
+_Note that to get the programmatic checking, then typeguard must be installed, and activated for the specified functions in its usual way. `torchtyping` can be used without typeguard -- to clearly document the expected shape, dtype etc. of the the tensors -- but is a lot less useful overall._
+
+By default, typeguard just checks each argument (and return value) individually. The real magic of `torchtyping` is how it additionally checks over all arguments (and return type), checking that not only are they of the right type, but that they are collectively of consistent shapes.
 
 ## More examples
 
@@ -57,6 +72,7 @@ def func(x: TensorType["batch", 5],
 	
 def func(x: TensorType[2, -1, -1]):
 	# x has shape (2, Any, Any)
+	# -1 is a special value to represent any size.
 ```
 
 **Checking arbitrary numbers of batch dimensions:**
@@ -108,18 +124,6 @@ def func(x: NamedTensorType["a": 3, "b"]):
 def func(x: TensorType[torch.sparse_coo]):
     # x is a sparse tensor with layout sparse_coo
 ```
-
-## Why is this useful?
-
-I find myself spending a lot of time annotating my code with comments like `# x has shape (batch, hidden_channels)` just to keep track of what shape any given tensor is.
-
-Getting this wrong is an easy way to get silent bugs, when your tensors don't do what you think they do.
-
-Meanwhile, the excellent [typeguard](https://github.com/agronholm/typeguard) package provides a way to check that any argument or return value from a function is actually what its type annotation claims it is. A very useful way to catch bugs.
-
-torchtyping solves the first problem by providing PyTorch types that typeguard can recognise.
-
-Additionally -- this is the real magic -- it performs an additional level of checking over multiple arguments, checking that not only are they of the right type, but that they are collectively of consistent shapes.
 
 ## API
 

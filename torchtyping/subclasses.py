@@ -1,13 +1,13 @@
 import torch
 
-from .tensor import TensorType
+from .tensor_type import TensorType
 
 from typing import Any
 
 
 class FloatTensorType(TensorType):
     @classmethod
-    def check(cls, instance: Any) -> bool
+    def check(cls, instance: Any) -> bool:
         check = super().check(instance)
         if not instance.is_floating_point():
             return False

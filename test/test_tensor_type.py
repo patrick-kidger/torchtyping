@@ -53,36 +53,53 @@ def test_fixed_int_dim():
     _3_dim_checker(x)
     with pytest.raises(TypeError):
         _3m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _4_dim_checker(x)
+    with pytest.raises(TypeError):
         _4m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _m14_dim_checker(x)
+    with pytest.raises(TypeError):
         _m1m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _34_dim_checker(x)
+    with pytest.raises(TypeError):
         _34m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _m14m1_dim_checker(x)
         
-    x = torch.rand(3, 4):
+    x = torch.rand(3, 4)
     _3m1_dim_checker(x)
     _m14_dim_checker(x)
     _m1m1_dim_checker(x)
     _34_dim_checker(x)
     with pytest.raises(TypeError):
         _3_dim_checker(x)
+    with pytest.raises(TypeError):
         _4_dim_checker(x)
+    with pytest.raises(TypeError):
         _4m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _34m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _m14m1_dim_checker(x)
         
-    x = torch.rand(4, 3):
+    x = torch.rand(4, 3)
     _4m1_dim_checker(x)
     _m1m1_dim_checker(x)
     with pytest.raises(TypeError):
         _3_dim_checker(x)
+    with pytest.raises(TypeError):
         _3m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _4_dim_checker(x)
+    with pytest.raises(TypeError):
         _m14_dim_checker(x)
+    with pytest.raises(TypeError):
         _34_dim_checker(x)
+    with pytest.raises(TypeError):
         _34m1_dim_checker(x)
+    with pytest.raises(TypeError):
         _m14m1_dim_checker(x)
 
 
@@ -127,7 +144,7 @@ def _m1bm1_dim_checker(x: TensorType[-1, "b", -1]):
 
     
 def test_str_dim():
-    x = torch.rand(3, 4):
+    x = torch.rand(3, 4)
     _ab_dim_checker(x)
     _cb_dim_checker(x)
     _am1_dim_checker(x)

@@ -12,4 +12,6 @@ import extensions
 def test_extensions():
     extensions.valid_foo()
     with pytest.raises(TypeError):
-        extensions.invalid_foo()
+        extensions.invalid_foo_one()
+    with pytest.raises(TypeError):
+        extensions.invalid_foo_two()

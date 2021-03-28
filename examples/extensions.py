@@ -39,7 +39,7 @@ class FooTensorType(TensorType):
         return check
         
     @classmethod
-    def getitem(cls, item: Any) -> Dict[str, Any]
+    def getitem(cls, item: Any) -> Dict[str, Any]:
         if isinstance(item, FooType):
             return {"foo": item.value}
         else:
