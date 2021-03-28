@@ -3,19 +3,19 @@
 Turn this:
 ```python
 def batch_outer_product(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-	# x has shape (batch, x_channels)
-	# y has shape (batch, y_channels)
-	# return has shape (batch, x_channels, y_channels)
-	
-	return x.unsqueeze(-1) * y.unsqueeze(-2)
+    # x has shape (batch, x_channels)
+    # y has shape (batch, y_channels)
+    # return has shape (batch, x_channels, y_channels)
+
+    return x.unsqueeze(-1) * y.unsqueeze(-2)
 ```
 into this:
 ```python
 def batch_outer_product(x:   TensorType["batch", "x_channels"],
                         y:   TensorType["batch", "y_channels"]
-					    ) -> TensorType["batch", "x_channels", "y_channels"]:
-						
-	return x.unsqueeze(-1) * y.unsqueeze(-2)
+                        ) -> TensorType["batch", "x_channels", "y_channels"]:
+
+    return x.unsqueeze(-1) * y.unsqueeze(-2)
 ```
 **with programmatic checking that the shape (dtype, ...) specification is met.**
 
@@ -39,7 +39,7 @@ torchtyping allows for more precisely specifying the details of tensor arguments
 - use `...` to indicate an arbitrary number of batch dimensions
 - ...plus anything else you like, as torchtyping is highly extensible.
 
-If [typeguard](https://github.com/agronholm/typeguard) is installed (and being used) then **at runtime the types will be checked** to ensure that the tensors really are of the advertised shape, dtype, etc. (If you're not using typeguard already, then strongly consider using it. It's a great way to squash bugs.)
+If [typeguard](https://github.com/agronholm/typeguard) is installed (and being used) then **at runtime the types will be checked** to ensure that the tensors really are of the advertised shape, dtype, etc. (If you're not already using typeguard for your regular Python programming, then strongly consider using it. It's a great way to squash bugs.)
 
 In the example above, then `x`, `y`, and the return value, are all checked to see that their first dimensions (`"batch"`) are the same size as each other. Likewise the `"x_channels"`, `"y_channels"` dimensions are checked against each other.
 
@@ -51,9 +51,9 @@ _Note that to get the programmatic checking, then typeguard must be installed, a
 ```python
 def func(x: TensorType["batch", 5],
          y: TensorType["batch", 3]):
-	# x has shape (batch, 5)
-	# y has shape (batch, 3)
-	# batch dimension is the same for both
+    # x has shape (batch, 5)
+    # y has shape (batch, 3)
+    # batch dimension is the same for both
 	
 def func(x: TensorType[2, -1, -1]):
 	# x has shape (2, Any, Any)
@@ -62,52 +62,51 @@ def func(x: TensorType[2, -1, -1]):
 **Checking arbitrary numbers of batch dimensions:**
 ```python	
 def func(x: TensorType[..., 2, 3]):
-	# x has shape (..., 2, 3)
+    # x has shape (..., 2, 3)
 	
 def func(x: TensorType[..., 2, "channels"],
          y: TensorType[..., "channels"):
-	# x has shape (..., 2, channels)
-	# y has shape (..., channels)
-	# "channels" is checked to be the same size for both arguments.
+    # x has shape (..., 2, channels)
+    # y has shape (..., channels)
+    # "channels" is checked to be the same size for both arguments.
 	
 def func(x: TensorType["batch": ..., "channels_x"],
          y: TensorType["batch": ..., "channels_y"]):
-	# x has shape (..., channels_x)
-	# y has shape (..., channels_y)
-	# the ... batch dimensions are checked to be of the same size.
+    # x has shape (..., channels_x)
+    # y has shape (..., channels_y)
+    # the ... batch dimensions are checked to be of the same size.
 ```
 
 **Return value checking:**
 ```python
 def func(x: TensorType[3, 4]) -> TensorType[()]:
-	# x has shape (3, 4)
-	# return has shape ()
+    # x has shape (3, 4)
+    # return has shape ()
 ```
 
 **Dtype checking:**
 ```python
 def func(x: TensorType[float]):
-	# x has dtype torch.float32
+    # x has dtype torch.float32
 ```
 
 **Checking shape and dtype at the same time:**
 ```python
 def func(x: TensorType[3, 4][float]):
-	# x has shape (3, 4) and has dtype torch.float32
+    # x has shape (3, 4) and has dtype torch.float32
 ```
 
 **Checking names for dimensions as per [named tensors](https://pytorch.org/docs/stable/named_tensor.html):**
 ```python
 def func(x: NamedTensorType["a": 3, "b"]):
-	# x has has names ("a", "b")
-	# x has shape (3, Any)
+    # x has has names ("a", "b")
+    # x has shape (3, Any)
 ```
 
 **Checking layouts:**
 ```python
 def func(x: TensorType[torch.sparse_coo]):
-	# x is a sparse tensor with layout sparse_coo
-
+    # x is a sparse tensor with layout sparse_coo
 ```
 
 ## Why is this useful?
@@ -129,10 +128,7 @@ torchtyping.TensorType
 ```
 The basic core of the library. Specify shapes, dtypes, dimension names, and even layouts as per the examples above, using the `[]` syntax.
 
-Check multiple things at once by chaining multiple `[]` in any order, for example:
-```python
-torchtyping.TensorType[3, 4][float][torch.strided]
-```
+Check multiple things at once by chaining multiple `[]` in any order, for example `torchtyping.TensorType[3, 4][float][torch.strided]`.
 
 ```python
 torchtyping.NamedTensorType
@@ -147,7 +143,7 @@ This is as a convenience, as named tensors aren't used very frequently, and ofte
 torchtyping.FloatTensorType
 torchtyping.NamedFloatTensorType
 ```
-There's quite a few floating point types: `torch.float16`, `torch.bfloat16`, `torch.float32`, torch.float64`, `torch.complex64`, `torch.complex128`. Frequently we're not that fussed which one we get.
+There's quite a few floating point types: `torch.float16`, `torch.bfloat16`, `torch.float32`, `torch.float64`, `torch.complex64`, `torch.complex128`. Frequently we're not that fussed which one we get.
 
 These are a convenience to allow any such dtype.
 
@@ -183,4 +179,4 @@ def foo_checker(x: FooTensorType[FooType("good-foo")]):
     pass
 ```
 
-See [extensions.py](./examples/extensions.py)` for more details.
+See [`extensions.py`](./examples/extensions.py) for more details.
