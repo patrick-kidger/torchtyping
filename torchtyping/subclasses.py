@@ -1,5 +1,3 @@
-import torch
-
 from .tensor_type import TensorType
 
 from typing import Any

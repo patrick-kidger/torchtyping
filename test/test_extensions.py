@@ -6,7 +6,7 @@ _here = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(_here / ".." / "examples"))
 
 
-import extensions
+import extensions  # noqa: E402
 
 
 def test_extensions():

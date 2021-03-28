@@ -8,10 +8,11 @@ def typechecked(*args, **kwargs):
     pass
 
 
-global patched_typeguard = False
+patched_typeguard = False
 
 
 def patch_typeguard():
     if not patched_typeguard:
-        global patched_typeguard = True
+        global patched_typeguard
+        patched_typeguard = True
         typeguard.typechecked = typechecked
