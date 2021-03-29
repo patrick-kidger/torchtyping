@@ -17,6 +17,8 @@ def batch_outer_product(x:   TensorType["batch", "x_channels"],
 
     return x.unsqueeze(-1) * y.unsqueeze(-2)
 ```
+in particular:
+
 **with programmatic checking that the shape (dtype, ...) specification is met.**
 
 Bye-bye bugs!
@@ -27,10 +29,6 @@ Bye-bye bugs!
 
 ```bash
 pip install git+https://github.com/patrick-kidger/torchtyping.git
-```
-
-```python
-from torchtyping import TensorType
 ```
 
 Requires Python 3.9+.
@@ -48,19 +46,39 @@ If (like me) you find yourself littering your code with comments like `# x has s
 - use `...` to indicate an arbitrary number of batch dimensions
 - ...plus anything else you like, as `torchtyping` is highly extensible.
 
-## Runtime Type Checking
-
-If [typeguard](https://github.com/agronholm/typeguard) is installed (and being used) then **at runtime the types will be checked** to ensure that the tensors really are of the advertised shape, dtype, etc.
-
-In the example above, then `x`, `y`, and the `return` value, are all checked to see that their first dimensions (`"batch"`) are the same size as each other. Likewise the `"x_channels"`, `"y_channels"` dimensions are all checked against each other.
-
-If you're not already using typeguard for your regular Python programming, then strongly consider using it. It's a great way to squash bugs. Both it and `torchtyping` automatically integrate with pytest, so if you're concerned about the performance penalty then they can be enabled during tests only.
-
-_Note that to get the programmatic checking, then typeguard must be installed, and activated for the specified functions in its usual way. `torchtyping` can be used without typeguard -- to clearly document the expected shape, dtype etc. of the the tensors -- but is a lot less useful overall._
+If [typeguard](https://github.com/agronholm/typeguard) is (optionally) installed then **at runtime the types can be checked** to ensure that the tensors really are of the advertised shape, dtype, etc. Enable this additional behaviour by running `torchtyping.patch_typeguard()`. (See the [full example](#examples) below.)
 
 By default, typeguard just checks each argument (and return value) individually. The real magic of `torchtyping` is how it additionally checks over all arguments (and return type), checking that not only are they of the right type, but that they are collectively of consistent shapes.
 
-## More examples
+If you're not already using typeguard for your regular Python programming, then strongly consider using it. It's a great way to squash bugs. Both typeguard and `torchtyping` also integrate with pytest, so if you're concerned about the performance penalty then they can be enabled during tests only.
+
+## Examples
+
+**Full example**:
+
+```python
+from torch import rand
+from torchtyping import TensorType, patch_typeguard
+from typeguard import typechecked
+
+# Doesn't matter when it happens relative to typeguard. Just needs
+# to be run at least once before runtime.
+# Can be omitted altogether if you just want to use torchtyping for
+# documentation purposes. (Without the checking.)
+patch_typeguard()
+
+
+# typeguard also supports other ways of checking arguments, see its
+# documentation.
+@typechecked
+def func(x: TensorType["batch"],
+         y: TensorType["batch"]) -> TensorType["batch"]:
+    return x + y
+
+
+func(rand(3), rand(3))  # works
+func(rand(3), rand(2))  # raises!
+```
 
 **Shape checking:**
 ```python
@@ -71,11 +89,12 @@ def func(x: TensorType["batch", 5],
     # batch dimension is the same for both
 	
 def func(x: TensorType[2, -1, -1]):
-	# x has shape (2, Any, Any)
+	# x has shape (2, any_one, any_two)
 	# -1 is a special value to represent any size.
 ```
 
 **Checking arbitrary numbers of batch dimensions:**
+
 ```python	
 def func(x: TensorType[..., 2, 3]):
     # x has shape (..., 2, 3)
@@ -150,6 +169,20 @@ torchtyping.NamedFloatTensorType
 There's quite a few floating point types: `torch.float16`, `torch.bfloat16`, `torch.float32`, `torch.float64`, `torch.complex64`, `torch.complex128`. Frequently we're not that fussed which one we get.
 
 These are a convenience to allow any such dtype.
+
+```python
+torchtyping.patch_typeguard
+```
+
+`torchtyping` integrates with typeguard to perform runtime type checking. If you want to enable this checking, then make sure to run this function before runtime. It doesn't matter when it happens relative to anything in typeguard, it just needs to happen before you actually run the functions you want to check.
+
+This function is safe to run multiple times. Probably the most sensible pattern is to run it once at the top of each file that uses `torchtyping`.
+
+```bash
+pytest --enable-torchtyping --typeguard-packages="your_package_here"
+```
+
+`torchtyping` offers a pytest plugin to automatically run `patch_typeguard` during your tests. Packages can then be passed to typeguard as normal.
 
 ## Custom extensions
 
