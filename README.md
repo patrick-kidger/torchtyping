@@ -33,7 +33,7 @@ pip install git+https://github.com/patrick-kidger/torchtyping.git
 from torchtyping import TensorType
 ```
 
-Requires Python 3.8+.
+Requires Python 3.9+.
 
 ## Details
 

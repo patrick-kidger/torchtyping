@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import threading
 import torch
 
-from typing import Any, Dict, NamedTuple, NoReturn, Optional, Tuple, Union
+from typing import Any, NamedTuple, NoReturn, Optional, Union
 
 
-NoneType = type(None)
 ellipsis = type(...)
 
 
@@ -26,6 +24,12 @@ class _TensorTypeMeta(type):
         return cls.check(instance)
 
     def __getitem__(cls, item: Any) -> _TensorTypeMeta:
+        return cls._meta_getitem(item, disallow_overwrite=True)
+
+    def update(cls, item: Any) -> _TensorTypeMeta:
+        return cls._meta_getitem(item, disallow_overwrite=False)
+
+    def _meta_getitem(cls, item: Any, disallow_overwrite: bool) -> _TensorTypeMeta:
         if cls._torchtyping_is_getitem_subclass:
             assert len(cls.__bases__) == 1
             base_cls = cls.__bases__[0]
@@ -34,9 +38,10 @@ class _TensorTypeMeta(type):
         name = base_cls.__name__
         dict = cls.getitem(item)
 
-        intersection = cls._torchtyping_fields.intersection(dict.keys())
-        if intersection:
-            raise TypeError(f"Overwriting fields: {intersection}.")
+        if disallow_overwrite:
+            intersection = cls._torchtyping_fields.intersection(dict.keys())
+            if len(intersection) > 0:
+                raise TypeError(f"Overwriting fields: {intersection}.")
 
         dict.update({field: getattr(cls, field) for field in cls._torchtyping_fields})
         key = [base_cls]
@@ -60,10 +65,6 @@ class _TensorTypeMeta(type):
             out = type(cls)(name, (base_cls,), dict)
             type(cls)._cache[key] = out
             return out
-
-
-_dimension_resolution = threading.local()
-_dimension_resolution.details: Optional[Dict[str, int]] = None
 
 
 class _Dim(NamedTuple):
@@ -100,36 +101,8 @@ class TensorType(metaclass=_TensorTypeMeta):
         if cls.dims is None:
             return True
 
-        details = _dimension_resolution.details
-        if details is None:
-            # This may feature some dimensions of size -1, or some ...
-            # indicating multiple dimensions.
-            cls_names = [cls_dim.name for cls_dim in cls.dims]
-            cls_shape = [cls_dim.size for cls_dim in cls.dims]
-        else:
-            # However if we have some details available then we can try
-            # to fill in some of the unspecified dimension sizes (-1) and
-            # number of dimensions (...).
-            reverse_cls_names = []
-            reverse_cls_shape = []
-            for dim in reversed(cls.dims):
-                name = dim.name
-                size = dim.size
-                num_dims = 1
-                if name is not None:
-                    if size == -1:
-                        size = details[name]
-                    if size is ...:
-                        # This assumes that named Ellipses only occur to the right of
-                        # unnamed Ellipses, to avoid filling in Ellipses that occur to
-                        # the left of other Ellipses.
-                        size = -1
-                        num_dims = details[name]
-                for _ in range(num_dims):
-                    reverse_cls_names.append(name)
-                    reverse_cls_shape.append(size)
-            cls_names = reversed(reverse_cls_names)
-            cls_shape = reversed(reverse_cls_shape)
+        cls_names = [cls_dim.name for cls_dim in cls.dims]
+        cls_shape = [cls_dim.size for cls_dim in cls.dims]
 
         if len(cls_names) != len(instance.names):
             return False
@@ -174,12 +147,14 @@ class TensorType(metaclass=_TensorTypeMeta):
             return _Dim(name=item.start, size=item.stop)
         elif item is ...:
             return _Dim(name=None, size=...)
+        elif isinstance(item, _Dim):
+            return item
         else:
             cls._type_error(item)
 
     # public:
 
-    dims: Optional[Tuple[_Dim, ...]] = None
+    dims: Optional[tuple[_Dim, ...]] = None
     dtype: Optional[torch.dtype] = None
     layout: Optional[torch.layout] = None
 
@@ -193,7 +168,7 @@ class TensorType(metaclass=_TensorTypeMeta):
         )
 
     @classmethod
-    def getitem(cls, item: Any) -> Dict[str, Any]:
+    def getitem(cls, item: Any) -> dict[str, Any]:
 
         #########
         # Dim:

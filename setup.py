@@ -44,7 +44,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 
-python_requires = "~=3.8"
+python_requires = "~=3.9"
 
 install_requires = ["torch>=1.7.0", "typeguard>=2.11.1"]
 

@@ -20,7 +20,7 @@ from torch import rand, tensor
 from torchtyping import TensorType
 from typeguard import typechecked
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class FooType:
@@ -39,7 +39,7 @@ class FooTensorType(TensorType):
         return check
 
     @classmethod
-    def getitem(cls, item: Any) -> Dict[str, Any]:
+    def getitem(cls, item: Any) -> dict[str, Any]:
         if isinstance(item, FooType):
             return {"foo": item.value}
         else:
