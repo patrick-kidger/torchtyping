@@ -17,12 +17,12 @@ class _Dim(NamedTuple):
             if self.size is ...:
                 return "..."
             else:
-                return str(self.size)
+                return repr(self.size)
         else:
             if self.size is ...:
                 return f"{self.name}: ..."
             elif self.size == -1:
-                return self.name
+                return repr(self.name)
             else:
                 return f"{self.name}: {self.size}"
 
@@ -69,7 +69,9 @@ class _TensorTypeMeta(type):
             value = dict[field]
             if value is not None:
                 if isinstance(value, tuple):
-                    if len(value) == 1:
+                    if len(value) == 0:
+                        name += "[()]"
+                    elif len(value) == 1:
                         name += f"[{value[0]}]"
                     else:
                         name += f"[{str(value)[1:-1]}]"
@@ -171,7 +173,7 @@ class TensorType(metaclass=_TensorTypeMeta):
             and (cls.layout in (None, instance.layout))
             and cls._check_dims(instance)
         )
-        
+
     @classmethod
     def like(cls, tensor: torch.Tensor) -> _TensorTypeMeta:
         if cls._torchtyping_is_getitem_subclass:
