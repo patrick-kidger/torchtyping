@@ -5,7 +5,7 @@ from torchtyping import NamedTensorType, TensorType
 from typeguard import typechecked
 
 
-@pytest.mark.patch_typeguard
+@pytest.mark.torchtyping_patch_typeguard
 def test_example0():
     @typechecked
     def batch_outer_product(
@@ -22,7 +22,7 @@ def test_example0():
         batch_outer_product(rand(1, 2, 3), rand(2, 3))
 
 
-@pytest.mark.patch_typeguard
+@pytest.mark.torchtyping_patch_typeguard
 def test_example1():
     @typechecked
     def func(x: TensorType["batch"], y: TensorType["batch"]) -> TensorType["batch"]:
@@ -33,7 +33,7 @@ def test_example1():
         func(rand(3), rand(2))
 
 
-@pytest.mark.patch_typeguard
+@pytest.mark.torchtyping_patch_typeguard
 def test_example2():
     @typechecked
     def func(x: TensorType["batch", 5], y: TensorType["batch", 3]):
@@ -97,7 +97,7 @@ def test_example4():
         func(rand(2))
 
 
-@pytest.mark.patch_typeguard
+@pytest.mark.torchtyping_patch_typeguard
 def test_example5():
     @typechecked
     def func(x: TensorType[..., 2, "channels"], y: TensorType[..., "channels"]):
@@ -114,7 +114,7 @@ def test_example5():
         func(rand(5, 2, 1), rand(2))
 
 
-@pytest.mark.patch_typeguard
+@pytest.mark.torchtyping_patch_typeguard
 def test_example6():
     @typechecked
     def func(
@@ -164,11 +164,7 @@ def test_example8():
         pass
 
     func(rand(2, 3))
-    func(
-        rand(
-            1
-        )
-    )
+    func(rand(1))
     func(rand(()))
     with pytest.raises(TypeError):
         func(tensor(1))

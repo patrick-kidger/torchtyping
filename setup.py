@@ -42,11 +42,14 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Scientific/Engineering :: Mathematics",
+    "Framework :: Pytest",
 ]
 
 python_requires = "~=3.9"
 
 install_requires = ["torch>=1.7.0", "typeguard>=2.11.1"]
+
+entry_points = dict(pytest11=["torchtyping = torchtyping.pytest_plugin"])
 
 setuptools.setup(
     name=name,
@@ -63,5 +66,6 @@ setuptools.setup(
     zip_safe=False,
     python_requires=python_requires,
     install_requires=install_requires,
+    entry_points=entry_points,
     packages=[name],
 )

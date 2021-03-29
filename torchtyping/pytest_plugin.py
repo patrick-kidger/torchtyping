@@ -4,12 +4,12 @@ from .typechecker import patch_typeguard
 def pytest_addoption(parser):
     group = parser.getgroup("torchtyping")
     group.addoption(
-        "--enable-torchtyping",
+        "--torchtyping-patch-typeguard",
         action="store_true",
-        help="Enable torchtyping's typeguard integration.",
+        help="Run torchtyping's typeguard patch.",
     )
 
 
 def pytest_configure(config):
-    if config.getoption("enable_torchtyping"):
+    if config.getoption("torchtyping_patch_typeguard"):
         patch_typeguard()
