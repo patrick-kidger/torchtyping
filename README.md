@@ -100,7 +100,7 @@ def func(x: TensorType[..., 2, 3]):
     # x has shape (..., 2, 3)
 	
 def func(x: TensorType[..., 2, "channels"],
-         y: TensorType[..., "channels"):
+         y: TensorType[..., "channels"]):
     # x has shape (..., 2, channels)
     # y has shape (..., channels)
     # "channels" is checked to be the same size for both arguments.

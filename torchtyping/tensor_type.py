@@ -8,6 +8,25 @@ from typing import Any, NamedTuple, NoReturn, Optional, Union
 ellipsis = type(...)
 
 
+class _Dim(NamedTuple):
+    name: Union[None, str]
+    size: Union[ellipsis, int]
+
+    def __repr__(self):
+        if self.name is None:
+            if self.size is ...:
+                return "..."
+            else:
+                return str(self.size)
+        else:
+            if self.size is ...:
+                return f"{self.name}: ..."
+            elif self.size == -1:
+                return self.name
+            else:
+                return f"{self.name}: {self.size}"
+
+
 class _TensorTypeMeta(type):
     _cache = {}
 
@@ -36,14 +55,15 @@ class _TensorTypeMeta(type):
         else:
             base_cls = cls
         name = base_cls.__name__
-        dict = cls.getitem(item)
+        update_dict = cls.getitem(item)
 
         if disallow_overwrite:
-            intersection = cls._torchtyping_fields.intersection(dict.keys())
+            intersection = cls._torchtyping_fields.intersection(update_dict.keys())
             if len(intersection) > 0:
                 raise TypeError(f"Overwriting fields: {intersection}.")
 
-        dict.update({field: getattr(cls, field) for field in cls._torchtyping_fields})
+        dict = {field: getattr(cls, field) for field in cls._torchtyping_fields}
+        dict.update(update_dict)
         key = [base_cls]
         for field in sorted(dict.keys()):
             value = dict[field]
@@ -67,25 +87,6 @@ class _TensorTypeMeta(type):
             return out
 
 
-class _Dim(NamedTuple):
-    name: Union[None, str]
-    size: Union[ellipsis, int]
-
-    def __repr__(self):
-        if self.name is None:
-            if self.size is ...:
-                return "..."
-            else:
-                return str(self.size)
-        else:
-            if self.size is ...:
-                return f"{self.name}: ..."
-            elif self.size == -1:
-                return self.name
-            else:
-                return f"{self.name}: {self.size}"
-
-
 class TensorType(metaclass=_TensorTypeMeta):
     # private:
 
@@ -104,8 +105,12 @@ class TensorType(metaclass=_TensorTypeMeta):
         cls_names = [cls_dim.name for cls_dim in cls.dims]
         cls_shape = [cls_dim.size for cls_dim in cls.dims]
 
-        if len(cls_names) != len(instance.names):
-            return False
+        if ... in cls_shape:
+            if sum(1 for size in cls_shape if size is not ...) > len(instance.names):
+                return False
+        else:
+            if len(cls_shape) != len(instance.names):
+                return False
 
         for cls_name, cls_size, instance_name, instance_size in zip(
             reversed(cls_names),
@@ -166,6 +171,23 @@ class TensorType(metaclass=_TensorTypeMeta):
             and (cls.layout in (None, instance.layout))
             and cls._check_dims(instance)
         )
+        
+    @classmethod
+    def like(cls, tensor: torch.Tensor) -> _TensorTypeMeta:
+        if cls._torchtyping_is_getitem_subclass:
+            out_cls = cls.__bases__[0]
+        else:
+            out_cls = cls
+        if "dims" in cls._torchtyping_fields:
+            shape = []
+            for name, size in zip(tensor.names, tensor.shape):
+                shape.append(_Dim(name=name, size=size))
+            out_cls = out_cls[tuple(shape)]
+        if "dtype" in cls._torchtyping_fields:
+            out_cls = out_cls[tensor.dtype]
+        if "layout" in cls._torchtyping_fields:
+            out_cls = out_cls[tensor.layout]
+        return out_cls
 
     @classmethod
     def getitem(cls, item: Any) -> dict[str, Any]:
