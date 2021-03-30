@@ -1,0 +1,5 @@
+[tool.black]
+line-length = 88
+
+[tool.pytest.ini_options]
+addopts = "--typeguard-packages=torchtyping"

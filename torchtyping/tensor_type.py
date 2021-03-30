@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 
-from typing import Any, NamedTuple, NoReturn, Optional, Union
+from typing import Any, Dict, NamedTuple, NoReturn, Optional, Union
 
 
 ellipsis = type(...)
@@ -28,7 +28,7 @@ class _Dim(NamedTuple):
 
 
 class _TensorTypeMeta(type):
-    _cache = {}
+    _cache: Dict[tuple[Any], _TensorTypeMeta] = {}
 
     def __new__(mcs, name, bases, dict):
         for base in bases:
@@ -93,8 +93,8 @@ class TensorType(metaclass=_TensorTypeMeta):
     # private:
 
     _torchtyping_is_getitem_subclass: bool = False
-    _torchtyping_fields = set()
-    _torchtyping_validate_named_tensor = False
+    _torchtyping_fields: set[str] = set()
+    _torchtyping_validate_named_tensor: bool = False
 
     def __new__(cls, *args, **kwargs):
         raise RuntimeError(f"Class {cls.__name__} cannot be instantiated.")

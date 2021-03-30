@@ -1,4 +1,5 @@
-# torchtyping
+<h1 align='center'>torchtyping</h1>
+<h2 align='center'>Type annotations for tensor shapes, dtype, ...</h2>
 
 Turn this:
 ```python
@@ -184,36 +185,8 @@ pytest --enable-torchtyping --typeguard-packages="your_package_here"
 
 `torchtyping` offers a pytest plugin to automatically run `patch_typeguard` during your tests. Packages can then be passed to typeguard as normal.
 
-## Custom extensions
+## Further documentation
 
-Writing custom extensions is a breeze, by subclassing `TensorType`. For example this checks that the tensor has an additional attribute `foo`, which must be a string with value `"good-foo"`:
+On writing custom extensions, FAQ, etc.
 
-```python
-class FooType:
-    def __init__(self, value):
-        self.value = value
-
-
-class FooTensorType(TensorType):
-    foo: Optional[str] = None
-    
-    @classmethod
-    def check(cls, instance: Any) -> bool:
-        check = super().check(instance)
-        if cls.foo is not None:
-            check = check and hasattr(instance, "foo") and instance.foo == cls.foo
-        return check
-        
-    @classmethod
-    def getitem(cls, item: Any) -> Dict[str, Any]
-        if isinstance(item, FooType):
-            return {"foo": item.value}
-        else:
-            return super().getitem(item)
-			
-			
-def foo_checker(x: FooTensorType[FooType("good-foo")]):
-    pass
-```
-
-See [`extensions.py`](./examples/extensions.py) for more details.
+[Further documentation](./FURTHER-DOCUMENTATION.md)

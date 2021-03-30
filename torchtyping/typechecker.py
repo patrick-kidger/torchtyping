@@ -5,7 +5,9 @@ import typeguard
 from .tensor_type import TensorType, _Dim
 
 
-def _handle_ellipsis_size(name: str, name_to_shape: dict[str, int], shape: tuple[int]):
+def _handle_ellipsis_size(
+    name: str, name_to_shape: dict[str, tuple[int]], shape: tuple[int]
+):
     try:
         lookup_shape = name_to_shape[name]
     except KeyError:
@@ -23,11 +25,9 @@ def _check_tensor(argname: str, value, hint):
         if isinstance(argname, torch.Tensor):
             like = hint.like(value)
         else:
-            type_ = type(value)
-            if hasattr(type_, "__qualname__"):
-                like = type_.__qualname__
-            else:
-                like = type_
+            like = type(value)
+            if hasattr(like, "__qualname__"):
+                like = like.__qualname__
         raise TypeError(f"{argname} must be {hint}, got {like} instead.")
 
 
