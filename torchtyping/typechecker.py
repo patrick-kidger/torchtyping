@@ -4,6 +4,8 @@ import typeguard
 
 from .tensor_type import TensorType, _Dim
 
+from typing import Any
+
 
 def _handle_ellipsis_size(
     name: str, name_to_shape: dict[str, tuple[int]], shape: tuple[int]
@@ -15,7 +17,7 @@ def _handle_ellipsis_size(
     else:
         if lookup_shape != shape:
             raise TypeError(
-                f"Dimension group {name} of inconsistent shape. Got "
+                f"Dimension group '{name}' of inconsistent shape. Got "
                 f"both {shape} and {lookup_shape}."
             )
 
@@ -68,7 +70,7 @@ def _check_memo(memo):
                                 # This gives a nicer error message though.
                                 if lookup_size != size:
                                     raise TypeError(
-                                        f"Dimension {dim.name} of inconsistent"
+                                        f"Dimension '{dim.name}' of inconsistent"
                                         f" size. Got both {size} and "
                                         f"{lookup_size}."
                                     )
@@ -124,6 +126,29 @@ def _check_memo(memo):
 
 
 unpatched_typeguard = True
+
+
+# Only implementing enough functionality for us to use here.
+# You can certainly find more complete implementations elsewhere.
+class ordered_set:
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._dict = {}  # Dictionaries are ordered since Python 3.6
+        
+    def add(self, item: Any) -> None:
+        self._dict[item] = None
+       
+    def remove(self, item: Any) -> None:
+        try:
+            del self._dict[item]
+        except KeyError:
+            pass
+            
+    def __len__(self):
+        return len(self._dict)
+            
+    def __iter__(self):
+        return iter(self._dict.keys())
 
 
 def patch_typeguard():
@@ -187,7 +212,9 @@ def patch_typeguard():
             if memo is None:
                 return _check_argument_types(*args, **kwargs)
             else:
-                memo.argname_shape_hints = set()
+                # Use an ordered set so we always check things in the same order,
+                # for consistency of error messages.
+                memo.argname_shape_hints = ordered_set()
                 memo.argname_value_hints = []
                 memo.name_to_size = {}
                 memo.name_to_shape = {}
@@ -202,7 +229,7 @@ def patch_typeguard():
                 return _check_return_type(*args, **kwargs)
             else:
                 # Reset the collections of things that need checking.
-                memo.argname_shape_hints = set()
+                memo.argname_shape_hints = ordered_set()
                 memo.argname_value_hints = []
                 # Do _not_ set memo.name_to_size or memo.name_to_shape, as we want to
                 # keep using the same sizes inferred from the arguments.

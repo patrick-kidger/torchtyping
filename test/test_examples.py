@@ -30,7 +30,7 @@ def test_example1():
 
     func(rand(3), rand(3))
     with pytest.raises(TypeError):
-        func(rand(3), rand(2))
+        func(rand(3), rand(1))
 
 
 @pytest.mark.torchtyping_patch_typeguard
