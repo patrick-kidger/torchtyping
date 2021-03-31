@@ -95,11 +95,9 @@ Each of `shape`, `dtype`, `layout`, `details` are optional.
   - `torch.float32`, `torch.float64` etc.
   - `int`, `bool`, `float`, which are converted to their corresponding PyTorch types. `float` is specifically interpreted as `torch.get_default_dtype()`, which is usually `float32`.
 - The `layout` argument can be either `torch.strided` or `torch.sparse_coo`, for dense and sparse tensors respectively.
-- The `details` argument offers a way to pass an arbitrary number of additional flags that customise and extend `torchtyping`. Two flags are built-in by default. `torchtyping.is_named` causes the [names of tensor dimensions](https://pytorch.org/docs/stable/named_tensor.html) to be checked, and `torchtyping.is_float` can be used to check that arbitrary floating point types are passed in. (Rather than just a specific one as with e.g. `TensorType[torch.float32]`.)
+- The `details` argument offers a way to pass an arbitrary number of additional flags that customise and extend `torchtyping`. Two flags are built-in by default. `torchtyping.is_named` causes the [names of tensor dimensions](https://pytorch.org/docs/stable/named_tensor.html) to be checked, and `torchtyping.is_float` can be used to check that arbitrary floating point types are passed in. (Rather than just a specific one as with e.g. `TensorType[torch.float32]`.) For discussion on how to customise `torchtyping` with your own `details`, see the [further documentation](./FURTHER-DOCUMENTATION.md#custom-extensions).
 
 Check multiple things at once by chaining them together inside a single `[]`. For example `TensorType[..., "channels", float, is_named]`.
-
-For discussion on how to customise `torchtyping` with your own `details`, see the [further documentation](./FURTHER-DOCUMENTATION.md).
 
 ```python
 torchtyping.patch_typeguard()

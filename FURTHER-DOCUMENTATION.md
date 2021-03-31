@@ -62,7 +62,7 @@ Python does provide a comprehensive typing system that we could have used instea
 
 ## Custom extensions
 
-Writing custom extensions is a breeze, by subclassing `torchtyping.TensorDetail`. For example this checks that the tensor has an additional attribute `foo`, which must be a string with value `"good-foo"`:
+Writing custom extensions is a breeze. Checking extra properties is done by subclassing `torchtyping.TensorDetail`, and passing instances of your `detail` to `torchtyping.TensorType`. For example this checks that the tensor has an additional attribute `foo`, which must be a string with value `"good-foo"`:
 
 ```python
 from torch import rand, Tensor
@@ -117,6 +117,8 @@ def invalid_foo_two():
     x.foo = "good-foo"
     foo_checker(x)
 ```
+
+As you can see, a `detail` must supply three methods. The first is a `check` method, which takes a tensor and checks whether it satisfies the detail. Second is a `__repr__`, which is used in error messages, to describe the detail that wasn't satisfied. Third is a `tensor_repr`, which is also used in error messages, to describe what property the tensor had (instead of the desired detail).
 
 ## Examples
 
