@@ -72,7 +72,7 @@ The `patch_typeguard()` call can happen any time before runtime. (And both befor
 
 If you're not already using `typeguard` for your regular Python programming, then strongly consider using it. It's a great way to squash bugs. Both `typeguard` and `torchtyping` also integrate with `pytest`, so if you're concerned about any performance penalty then they can be enabled during tests only.
 
-## Core API
+## API
 
 ```python
 torchtyping.TensorType[shape, dtype, layout, details]
@@ -85,7 +85,7 @@ Each of `shape`, `dtype`, `layout`, `details` are optional.
 - The `shape` argument can be any of:
   - An `int`: the dimension must be of exactly this size. If it is `-1` then any size is allowed.
   - A `str`: the size of the dimension passed at runtime will be bound to this name, and all tensors checked that the sizes are consistent.
-  - A `...`: An arbitrary number of dimensions.
+  - A `...`: An arbitrary number of dimensions of any sizes.
   - A `str: int` pair (technically it's a slice), combining both `str` and `int` behaviour. (Just a `str` on its own is equivalent to `str: -1`.)
   - A `str: ...` pair, in which case the multiple dimensions corresponding to `...` will be bound to the name specified by `str`, and again checked for consistency between arguments.
   - Any tuple of the above, e.g. `TensorType["batch": ..., "length": 10, "channels", -1]`
@@ -93,7 +93,7 @@ Each of `shape`, `dtype`, `layout`, `details` are optional.
   - `torch.float32`, `torch.float64` etc.
   - `int`, `bool`, `float`, which are converted to their corresponding PyTorch types. `float` is specifically interpreted as `torch.get_default_dtype()`, which is usually `float32`.
 - The `layout` argument can be either `torch.strided` or `torch.sparse_coo`, for dense and sparse tensors respectively.
-- The `details` argument offers a way to pass an arbitrary number of additional flags that customise and extend `torchtyping`. Two flags are built-in by default. `torchtyping.named_detail` causes the [names of tensor dimensions](https://pytorch.org/docs/stable/named_tensor.html) to be checked, and `torchtyping.float_detail` can be used to check that arbitrary floating point types are passed in. (Rather than just a specific one as with e.g. `[torch.float32]`.)
+- The `details` argument offers a way to pass an arbitrary number of additional flags that customise and extend `torchtyping`. Two flags are built-in by default. `torchtyping.named_detail` causes the [names of tensor dimensions](https://pytorch.org/docs/stable/named_tensor.html) to be checked, and `torchtyping.float_detail` can be used to check that arbitrary floating point types are passed in. (Rather than just a specific one as with e.g. `TensorType[torch.float32]`.)
 
 Check multiple things at once by chaining them together inside a single `[]`. For example `TensorType[..., "channels", float, named_detail]`.
 

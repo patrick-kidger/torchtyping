@@ -9,8 +9,8 @@ good = foo = None
 
 
 class FooDetail(TensorDetail):
-    def __init__(self, *, value, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, value):
+        super().__init__()
         self.value = value
 
     def check(self, tensor: Tensor) -> bool:
@@ -35,7 +35,7 @@ class FooDetail(TensorDetail):
 
 
 @typechecked
-def foo_checker(tensor: TensorType[float, FooDetail(value="good-foo")]):
+def foo_checker(tensor: TensorType[float, FooDetail("good-foo")]):
     pass
 
 
