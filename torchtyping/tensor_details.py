@@ -4,7 +4,7 @@ import abc
 import collections
 import torch
 
-from typing import Optional, Type, Union
+from typing import Optional, Union
 
 
 ellipsis = type(...)
@@ -32,7 +32,9 @@ _no_name = object()
 class _Dim(collections.namedtuple("_Dim", ["name", "size"])):
     # None corresponds to a name not being set. no_name corresponds to us not caring
     # whether a name is set.
-    name: Union[None, str, Type[_no_name]]
+    name: Union[None, str, type(_no_name)]
+    # technically supposed to use an enum to annotate singletons but that's overkill.
+
     size: Union[ellipsis, int]
 
     def __repr__(self) -> str:

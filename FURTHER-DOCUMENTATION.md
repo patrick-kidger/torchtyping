@@ -10,25 +10,23 @@ Then sure that you've enabled `typeguard`, either by decorating the function wit
 
 If you have done all of that, then feel free to raise an issue.
 
-**Silencing spurious flake8 warnings.**
+**flake8 is giving spurious warnings.**
 
 Running flake8 will produce spurious warnings for annotations using strings: `TensorType["batch"]` gives `F821 undefined name 'batch'`.
 
-You can silence these en-masse just by creating a dummy `batch = None` anywhere in the file. (Or more laboriously, placing `# noqa: F821` on the relevant lines.)
+You can silence these en-masse just by creating a dummy `batch = None` anywhere in the file. (Or by placing `# noqa: F821` on the relevant lines.)
 
-**Does this work with mypy?**  
+**Does this work with `mypy`?**  
 
-Mostly.
+Mostly. You'll need to tell `mypy` not to think too hard about `torchtyping`, by annotating its import statements with:
 
-The functionality provided by `torchtyping` is [explicitly beyond the current scope of mypy](https://www.python.org/dev/peps/pep-0586/#true-dependent-types-integer-generics), so there's not much hope of tight integration.
+```python
+from torchtyping import TensorType  # type: ignore
+```
 
-But at the very least, `torchtyping` generally shouldn't break mypy. Put a `# type: ignore` comment on the same line in which you import `torchtyping` and you'll be good to go.
+This is because the functionality provided by `torchtyping` is [currently beyond](https://www.python.org/dev/peps/pep-0646/) what `mypy` is capable of representing/understanding. (See also the [links at the end](#other-libraries-and-resources) for further material on this.)
 
-There is one exception: using `TensorType["string": value]` hits a bug in mypy and causes a crash. See the corresponding [mypy issue](https://github.com/python/mypy/issues/10266).
-
-**How to indicate a scalar Tensor, i.e. one with zero dimensions?**
-
-`TensorType[()]`. Equivalently `TensorType[(), float]`, etc.
+Additionally `mypy` has a bug which causes it crash on any file using the `str: int` or `str: ...` notation, as in `TensorType["batch": 10]`. This can be worked around by skipping the file, by creating a `filename.pyi` file in the same directory. See also the corresponding [mypy issue](https://github.com/python/mypy/issues/10266).
 
 **Are nested annotations of the form `Blahblah[Moreblah[TensorType[...]]]` supported?**
 
@@ -46,19 +44,17 @@ def func(x:  TensorType["dim1": ..., "dim2": ...],
     return (x * y).sum(dim=sum_dims)
 ```
 
-**Trying to use `...` is raising a `NotImplementedError`**
-
-Using `...` in a shape specification is currently only supported in the left-most places of a tensor shape. Supporting using `...` in other locations would be a fair bit more complicated to write the logic for.
-
 **`TensorType[float]` corresponds to`float32` but `torch.rand(2).to(float)` produces `float64`**.
 
 This is a deliberate asymmetry. `TensorType[float]` corresponds to `torch.get_default_dtype()`, as a convenience, but `.to(float)` always corresponds to `float64`. 
 
-**Why is `TensorType` implemented the way it is / shouldn't it be implemented in a different way / why use `typeguard` rather than a different package / etc. ?**
+**How to indicate a scalar Tensor, i.e. one with zero dimensions?**
 
-The short answer is that this works around the various limitations elsewhere in the ecosystem.
+`TensorType[()]`. Equivalently `TensorType[(), float]`, etc.
 
-Python does provide a comprehensive typing system that we could have used instead -- `typing.Annotated[torch.Tensor, ...]`,  would probably make the most sense -- but then there's no easy way to add the extra shape checking that gives `torchtyping` its _raison d'etre_.
+**Support for TensorFlow/JAX/etc?**
+
+Not at the moment. The library is called `torchtyping` after all. [There are alternatives for these libraries.](#other-libraries-and-resources)
 
 ## Custom extensions
 
@@ -120,7 +116,16 @@ def invalid_foo_two():
 
 As you can see, a `detail` must supply three methods. The first is a `check` method, which takes a tensor and checks whether it satisfies the detail. Second is a `__repr__`, which is used in error messages, to describe the detail that wasn't satisfied. Third is a `tensor_repr`, which is also used in error messages, to describe what property the tensor had (instead of the desired detail).
 
-## Examples
+## Other libraries and resources
+
+`torchtyping` is one amongst a few libraries trying to do this kind of thing. Here's some links for the curious:
+
+- [PEP 646](https://www.python.org/dev/peps/pep-0646/) proposes variadic generics. These are a tool needed for static checkers (like `mypy`) to be able to do the kind of shape checking that `torchtyping` does dynamically. However at time of writing Python doesn't yet support this.
+- [TensorAnnotations](https://github.com/deepmind/tensor_annotations) is a library for statically checking JAX or TensorFlow tensor shapes.
+- [`tsanley`](https://github.com/ofnote/tsanley)/[`tsalib`](https://github.com/ofnote/tsalib) is an alternative dynamic shape checker.
+- The [Ideas for array shape typing in Python](https://docs.google.com/document/d/1vpMse4c6DrWH5rq2tQSx3qwP_m_0lyn-Ij4WHqQqRHY/) document is a good overview of some of the ways to type check arrays.
+
+## More Examples
 
 **Shape checking:**
 

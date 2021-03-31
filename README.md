@@ -66,9 +66,9 @@ func(rand(3), rand(1))
 # TypeError: Dimension 'batch' of inconsistent size. Got both 1 and 3.
 ```
 
-`typeguard` also has an import hook that can be used to automatically test an entire module, without needing to add `@typechecked` decorators.
+`typeguard` also has an import hook that can be used to automatically test an entire module, without needing to manually add `@typechecked` decorators.
 
-The `patch_typeguard()` call can happen any time before runtime. (And both before or after a `typeguard` import hook is fine.) If you're not using `typeguard` it can be omitted altogether, and `torchtyping` just used for documentation purposes.
+`patch_typeguard()` should be called before using `@typeguard.typechecked`. (Or before using the `typeguard` import hook.) If you're not using `typeguard` then it can be omitted altogether, and `torchtyping` just used for documentation purposes.
 
 If you're not already using `typeguard` for your regular Python programming, then strongly consider using it. It's a great way to squash bugs. Both `typeguard` and `torchtyping` also integrate with `pytest`, so if you're concerned about any performance penalty then they can be enabled during tests only.
 
@@ -97,21 +97,21 @@ Each of `shape`, `dtype`, `layout`, `details` are optional.
 - The `layout` argument can be either `torch.strided` or `torch.sparse_coo`, for dense and sparse tensors respectively.
 - The `details` argument offers a way to pass an arbitrary number of additional flags that customise and extend `torchtyping`. Two flags are built-in by default. `torchtyping.is_named` causes the [names of tensor dimensions](https://pytorch.org/docs/stable/named_tensor.html) to be checked, and `torchtyping.is_float` can be used to check that arbitrary floating point types are passed in. (Rather than just a specific one as with e.g. `TensorType[torch.float32]`.) For discussion on how to customise `torchtyping` with your own `details`, see the [further documentation](./FURTHER-DOCUMENTATION.md#custom-extensions).
 
-Check multiple things at once by chaining them together inside a single `[]`. For example `TensorType[..., "channels", float, is_named]`.
+Check multiple things at once by just putting them all together inside a single `[]`. For example `TensorType["batch": ..., "length", "channels", float, is_named]`.
 
 ```python
 torchtyping.patch_typeguard()
 ```
 
-`torchtyping` integrates with `typeguard` to perform runtime type checking. `patch_typeguard` should be called at the global level, before calling the `typeguard` import hook, or before calling `typeguard.typechecked` on a function.
+`torchtyping` integrates with `typeguard` to perform runtime type checking. `patch_typeguard` should be called at the global level, before calling the `typeguard` import hook, or before calling `@typeguard.typechecked` on a function.
 
-This function is safe to run multiple times. Probably the most sensible pattern is to run it once at the top of each file that uses `torchtyping`.
+This function is safe to run multiple times. (It does nothing after the first run.) For example a sensible pattern would be to run it once at the top of each file that uses `torchtyping`, before calling `@typeguard.typechecked`.
 
 ```bash
-pytest --torchtyping-patch-typeguard --typeguard-packages="your_package_here"
+pytest --torchtyping-patch-typeguard
 ```
 
-`torchtyping` offers a pytest plugin to automatically run `patch_typeguard` during your tests. Packages can then be passed to typeguard as normal.
+`torchtyping` offers a pytest plugin to automatically run `torchtyping.patch_typeguard()` before your tests. Packages can then be passed to `typeguard` as normal. (Either by using `@typeguard.typechecked`, `typeguard`'s import hook, or the `pytest` flag `--typeguard-packages="your_package_here"`.)
 
 ## Further documentation
 
@@ -120,4 +120,5 @@ See the [further documentation](./FURTHER-DOCUMENTATION.md) for:
 - FAQ;
   - Including how to easily silence spurious flake8 errors.
 - How to write custom extensions to `torchtyping`;
+- Resources and links to alternative proposals and libraries;
 - More examples.
