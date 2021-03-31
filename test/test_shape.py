@@ -4,6 +4,9 @@ from torchtyping import TensorType
 import typeguard
 
 
+a = b = c = None
+
+
 def test_fixed_int_dim():
     @typeguard.typechecked
     def _3_dim_checker(x: TensorType[3]):
@@ -135,8 +138,11 @@ def test_str_dim():
     _m1b_dim_checker(x)
     with pytest.raises(TypeError):
         _a_dim_checker(x)
+    with pytest.raises(TypeError):
         _abc_dim_checker(x)
+    with pytest.raises(TypeError):
         _abm1_dim_checker(x)
+    with pytest.raises(TypeError):
         _m1bm1_dim_checker(x)
 
 
@@ -198,8 +204,13 @@ def test_int_str_dim():
     _m1b_dim_checker(x)
     with pytest.raises(TypeError):
         _a_dim_checker1(x)
+    with pytest.raises(TypeError):
         _a_dim_checker2(x)
+    with pytest.raises(TypeError):
         _ab_dim_checker6(x)
+    with pytest.raises(TypeError):
         _ab_dim_checker7(x)
+    with pytest.raises(TypeError):
         _abm1_dim_checker(x)
+    with pytest.raises(TypeError):
         _m1bm1_dim_checker(x)

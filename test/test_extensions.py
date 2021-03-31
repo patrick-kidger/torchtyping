@@ -5,7 +5,8 @@ from typeguard import typechecked
 
 from typing import Any, Optional
 
-# Write the extension
+good = foo = None
+
 
 class FooType:
     def __init__(self, value):
@@ -29,7 +30,6 @@ class FooTensorType(TensorType):
         else:
             return super().getitem(item)
 
-# Test the extension
 
 @typechecked
 def foo_checker(tensor: FooTensorType[float][FooType("good-foo")]):

@@ -66,7 +66,7 @@ func(rand(3), rand(1))
 # TypeError: Dimension 'batch' of inconsistent size. Got both 1 and 3.
 ```
 
-`typeguard` also has an import hook to automatically test an entire module, without needing to add `@typechecked` decorators.
+`typeguard` also has an import hook that can be used to automatically test an entire module, without needing to add `@typechecked` decorators.
 
 The `patch_typeguard()` call can happen any time before runtime. (And both before or after a `typeguard` import hook is fine.) If you're not using `typeguard` it can be omitted altogether, and `torchtyping` just used for documentation purposes.
 
@@ -75,32 +75,35 @@ If you're not already using `typeguard` for your regular Python programming, the
 ## Core API
 
 ```python
-torchtyping.TensorType[...shape...][...dtype...][...layout...]
+torchtyping.TensorType[shape, dtype, layout, details]
 ```
 
-The core of the library. Specify shapes, dtypes, dimension names, and layouts using the `[]` syntax.
+The core of the library.
 
-- The shape argument can be any of:
+Each of `shape`, `dtype`, `layout`, `details` are optional.
+
+- The `shape` argument can be any of:
   - An `int`: the dimension must be of exactly this size. If it is `-1` then any size is allowed.
   - A `str`: the size of the dimension passed at runtime will be bound to this name, and all tensors checked that the sizes are consistent.
   - A `...`: An arbitrary number of dimensions.
   - A `str: int` pair (technically it's a slice), combining both `str` and `int` behaviour. (Just a `str` on its own is equivalent to `str: -1`.)
   - A `str: ...` pair, in which case the multiple dimensions corresponding to `...` will be bound to the name specified by `str`, and again checked for consistency between arguments.
   - Any tuple of the above, e.g. `TensorType["batch": ..., "length": 10, "channels", -1]`
-- The dtype argument can be any of:
+- The `dtype` argument can be any of:
   - `torch.float32`, `torch.float64` etc.
   - `int`, `bool`, `float`, which are converted to their corresponding PyTorch types. `float` is specifically interpreted as `torch.get_default_dtype()`, which is usually `float32`.
-- The layout argument can be either `torch.strided` or `torch.sparse_coo`, for dense and sparse tensors respectively.
+- The `layout` argument can be either `torch.strided` or `torch.sparse_coo`, for dense and sparse tensors respectively.
+- The `details` argument offers a way to pass an arbitrary number of additional flags that customise and extend `torchtyping`. Two flags are built-in by default. `torchtyping.named_detail` causes the [names of tensor dimensions](https://pytorch.org/docs/stable/named_tensor.html) to be checked, and `torchtyping.float_detail` can be used to check that arbitrary floating point types are passed in. (Rather than just a specific one as with e.g. `[torch.float32]`.)
 
-Check multiple things at once by chaining multiple `[]` in any order. For example `torchtyping.TensorType[3, 4][float][torch.strided]`.
+Check multiple things at once by chaining them together inside a single `[]`. For example `TensorType[..., "channels", float, named_detail]`.
 
-For other things like checking [named tensors](https://pytorch.org/docs/stable/named_tensor.html), see the [further documentation](./FURTHER-DOCUMENTATION.md).
+For discussion on how to customise `torchtyping` with your own `details`, see the [further documentation](./FURTHER-DOCUMENTATION.md).
 
 ```python
 torchtyping.patch_typeguard()
 ```
 
-`torchtyping` integrates with typeguard to perform runtime type checking. If you want to enable this checking, then make sure to call this function before runtime. It's safe to call before or after the `typeguard` import hook, or after calling `typeguard.typechecked` on a function. It just needs to happen before you actually run the functions you want to check.
+`torchtyping` integrates with typeguard to perform runtime type checking. If you want to enable this checking, then make sure to call this function before runtime. It's safe to call before or after the `typeguard` import hook, or before or after calling `typeguard.typechecked` on a function. It just needs to happen before you actually run the functions you want to check.
 
 This function is safe to run multiple times. Probably the most sensible pattern is to run it once at the top of each file that uses `torchtyping`.
 
@@ -114,7 +117,6 @@ pytest --torchtyping-patch-typeguard --typeguard-packages="your_package_here"
 
 See the [further documentation](./FURTHER-DOCUMENTATION.md) for:
 
-- More examples;
+- FAQ;
 - How to write custom extensions to `torchtyping`;
-- Further details of `torchtyping`'s API;
-- FAQ.
+- More examples.

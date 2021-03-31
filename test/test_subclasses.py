@@ -1,49 +1,52 @@
 import pytest
 import torch
-from torchtyping import FloatTensorType, NamedTensorType, NamedFloatTensorType
+from torchtyping import TensorType, float_detail, named_detail
 import typeguard
+
+
+a = b = c = None
 
 
 def test_float_tensor():
     @typeguard.typechecked
-    def func1(x: FloatTensorType):
+    def func1(x: TensorType[float_detail]):
         pass
 
     @typeguard.typechecked
-    def func2(x: FloatTensorType[2, 2]):
+    def func2(x: TensorType[2, 2, float_detail]):
         pass
 
     @typeguard.typechecked
-    def func3(x: FloatTensorType[float]):
+    def func3(x: TensorType[float, float_detail]):
         pass
 
     @typeguard.typechecked
-    def func4(x: FloatTensorType[bool]):
+    def func4(x: TensorType[bool, float_detail]):
         pass
 
     @typeguard.typechecked
-    def func5(x: FloatTensorType["a":2, 2][float]):
+    def func5(x: TensorType["a":2, 2, float, float_detail]):
         pass
 
     @typeguard.typechecked
-    def func6(x: FloatTensorType[2, "b":2][torch.sparse_coo]):
+    def func6(x: TensorType[2, "b":2, torch.sparse_coo, float_detail]):
         pass
 
     x = torch.rand(2, 2)
     y = torch.rand(1)
     z = torch.tensor([[0, 1], [2, 3]])
     w = torch.rand(4).to_sparse()
-    a = torch.rand(2, 2).to_sparse()
-    b = torch.tensor([[0, 1], [2, 3]]).to_sparse()
+    w1 = torch.rand(2, 2).to_sparse()
+    w2 = torch.tensor([[0, 1], [2, 3]]).to_sparse()
 
     func1(x)
     func1(y)
     with pytest.raises(TypeError):
         func1(z)
     func1(w)
-    func1(a)
+    func1(w1)
     with pytest.raises(TypeError):
-        func1(b)
+        func1(w2)
 
     func2(x)
     with pytest.raises(TypeError):
@@ -52,18 +55,18 @@ def test_float_tensor():
         func2(z)
     with pytest.raises(TypeError):
         func2(w)
-    func2(a)
+    func2(w1)
     with pytest.raises(TypeError):
-        func2(b)
+        func2(w2)
 
     func3(x)
     func3(y)
     with pytest.raises(TypeError):
         func3(z)
     func3(w)
-    func3(a)
+    func3(w1)
     with pytest.raises(TypeError):
-        func3(b)
+        func3(w2)
 
     with pytest.raises(TypeError):
         func4(x)
@@ -74,9 +77,9 @@ def test_float_tensor():
     with pytest.raises(TypeError):
         func4(w)
     with pytest.raises(TypeError):
-        func4(a)
+        func4(w1)
     with pytest.raises(TypeError):
-        func4(b)
+        func4(w2)
 
     func5(x)
     with pytest.raises(TypeError):
@@ -85,9 +88,9 @@ def test_float_tensor():
         func5(z)
     with pytest.raises(TypeError):
         func5(w)
-    func5(a)
+    func5(w1)
     with pytest.raises(TypeError):
-        func5(b)
+        func5(w2)
 
     with pytest.raises(TypeError):
         func6(x)
@@ -97,42 +100,42 @@ def test_float_tensor():
         func6(z)
     with pytest.raises(TypeError):
         func6(w)
-    func6(a)
+    func6(w1)
     with pytest.raises(TypeError):
-        func6(b)
+        func6(w2)
 
 
 def test_named_tensor():
     @typeguard.typechecked
-    def _named_a_dim_checker(x: NamedTensorType["a"]):
+    def _named_a_dim_checker(x: TensorType["a", named_detail]):
         pass
 
     @typeguard.typechecked
-    def _named_ab_dim_checker(x: NamedTensorType["a", "b"]):
+    def _named_ab_dim_checker(x: TensorType["a", "b", named_detail]):
         pass
 
     @typeguard.typechecked
-    def _named_abc_dim_checker(x: NamedTensorType["a", "b", "c"]):
+    def _named_abc_dim_checker(x: TensorType["a", "b", "c", named_detail]):
         pass
 
     @typeguard.typechecked
-    def _named_cb_dim_checker(x: NamedTensorType["c", "b"]):
+    def _named_cb_dim_checker(x: TensorType["c", "b", named_detail]):
         pass
 
     @typeguard.typechecked
-    def _named_am1_dim_checker(x: NamedTensorType["a", -1]):
+    def _named_am1_dim_checker(x: TensorType["a", -1, named_detail]):
         pass
 
     @typeguard.typechecked
-    def _named_m1b_dim_checker(x: NamedTensorType[-1, "b"]):
+    def _named_m1b_dim_checker(x: TensorType[-1, "b", named_detail]):
         pass
 
     @typeguard.typechecked
-    def _named_abm1_dim_checker(x: NamedTensorType["a", "b", -1]):
+    def _named_abm1_dim_checker(x: TensorType["a", "b", -1, named_detail]):
         pass
 
     @typeguard.typechecked
-    def _named_m1bm1_dim_checker(x: NamedTensorType[-1, "b", -1]):
+    def _named_m1bm1_dim_checker(x: TensorType[-1, "b", -1, named_detail]):
         pass
 
     x = torch.rand(3, 4)
@@ -179,8 +182,8 @@ def test_named_float_tensor():
     y = torch.rand(2, 2, names=("a", "b"))
     z = torch.rand(2, 2, names=("a", "c"))
     w = torch.rand(2, 3)
-    a = torch.rand(2, 2, names=("a", None))
-    b = torch.rand(2, 3, names=("a", "b")).int()
+    w1 = torch.rand(2, 2, names=("a", None))
+    w2 = torch.rand(2, 3, names=("a", "b")).int()
 
     func(x)
     with pytest.raises(TypeError):
@@ -190,6 +193,6 @@ def test_named_float_tensor():
     with pytest.raises(TypeError):
         func(w)
     with pytest.raises(TypeError):
-        func(a)
+        func(w1)
     with pytest.raises(TypeError):
-        func(b)
+        func(w2)

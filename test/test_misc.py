@@ -4,6 +4,9 @@ from torchtyping import TensorType
 from typeguard import typechecked
 
 
+dim1 = dim2 = channel = None
+
+
 def test_non_tensor():
     class Tensor:
         shape = torch.Size([2, 2])
@@ -29,11 +32,11 @@ def test_non_tensor():
         pass
 
     @typechecked
-    def accepts_tensor5(x: TensorType[...][float]):
+    def accepts_tensor5(x: TensorType[..., float]):
         pass
 
     @typechecked
-    def accepts_tensor6(x: TensorType[2][int]):
+    def accepts_tensor6(x: TensorType[2, int]):
         pass
 
     @typechecked
@@ -41,7 +44,7 @@ def test_non_tensor():
         pass
 
     @typechecked
-    def accepts_tensor8(x: TensorType[torch.sparse_coo][float][2]):
+    def accepts_tensor8(x: TensorType[2, float, torch.sparse_coo]):
         pass
 
     for func in (
@@ -75,11 +78,11 @@ def test_non_tensor():
         pass
 
     @typechecked
-    def accepts_tensors5(x: TensorType[...][float], y: TensorType):
+    def accepts_tensors5(x: TensorType[..., float], y: TensorType):
         pass
 
     @typechecked
-    def accepts_tensors6(x: TensorType[2][int], y: TensorType):
+    def accepts_tensors6(x: TensorType[2, int], y: TensorType):
         pass
 
     @typechecked
@@ -87,7 +90,7 @@ def test_non_tensor():
         pass
 
     @typechecked
-    def accepts_tensors8(x: TensorType[torch.sparse_coo][float][2], y: TensorType):
+    def accepts_tensors8(x: TensorType[torch.sparse_coo, float, 2], y: TensorType):
         pass
 
     for func in (
@@ -108,12 +111,12 @@ def test_non_tensor():
 
 def test_multiple_ellipsis():
     @typechecked
-    def func(x:  TensorType["dim1": ..., "dim2": ...],
-             y:  TensorType["dim2": ...]
-            ) -> TensorType["dim1": ...]:
+    def func(
+        x: TensorType["dim1":..., "dim2":...], y: TensorType["dim2":...]
+    ) -> TensorType["dim1":...]:
         sum_dims = [x - 1 for x in range(y.dim())]
         return (x * y).sum(dim=sum_dims)
-        
+
     func(torch.rand(1, 2), torch.rand(2))
     func(torch.rand(3, 4, 5, 9), torch.rand(5, 9))
     with pytest.raises(TypeError):
@@ -128,7 +131,7 @@ def test_nested_types():
     @typechecked
     def func(x: tuple[TensorType[3, "channel", 4], TensorType["channel"]]):
         pass
-        
+
     func((torch.rand(3, 1, 4), torch.rand(1)))
     func((torch.rand(3, 5, 4), torch.rand(5)))
     with pytest.raises(TypeError):

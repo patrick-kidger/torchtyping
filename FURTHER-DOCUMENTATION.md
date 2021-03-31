@@ -1,31 +1,12 @@
 # Further documentation
 
-## Further API
-
-`torchtyping` has a few other things in its API beyond that listed in the main [README](./README.md) file.
-
-```python
-torchtyping.NamedTensorType
-```
-
-By default the names associated with each dimension in `TensorType` are not checked against the dimension names used as part of being a [named tensor](https://pytorch.org/docs/stable/named_tensor.html). This is because named tensors aren't used very frequently, and often we still want to name the `TensorType` dimensions to check that they're the same size as other arguments.
-
-`NamedTensorType` performs these additional checks. For example `func(x: NamedTensorType["batch", "channels"])` may be called with `torch.rand(4, 5, names=("batch", "channels"))`, but not `torch.rand(4, 5)`.
-
-```python
-torchtyping.FloatTensorType
-torchtyping.NamedFloatTensorType
-```
-
-There's quite a few floating point types: `torch.float16`, `torch.bfloat16`, `torch.float32`, `torch.float64`, `torch.complex64`, `torch.complex128`. Frequently we're not that fussed which one we get.
-
-These are a convenience to allow any such dtype.
-
 ## FAQ
 
 **The runtime checking isn't working!**
 
-Make sure that you've enable typeguard, either by decorating with `typeguard.typechecked`, or by using `typeguard.importhook.install_import_hook()`, or by using the pytest command line flags listed in the main [README](./README.md).
+Make sure that you've enable typeguard, either by decorating the function with `typeguard.typechecked`, or by using `typeguard.importhook.install_import_hook`, or by using the pytest command line flags listed in the main [README](./README.md).
+
+Then make sure that you're calling `torchtyping.patch_typeguard`.
 
 If you have done all of that, then feel free to raise an issue.
 
@@ -45,24 +26,9 @@ But at the very least, `torchtyping` generally shouldn't break mypy. Put a `# ty
 
 There is one exception: using `TensorType["string": value]` hits a bug in mypy and causes a crash. See the corresponding [mypy issue](https://github.com/python/mypy/issues/10266).
 
-**What does `patch_typeguard()` actually do?**
+**How to indicate a scalar Tensor, i.e. one with zero dimensions?**
 
-This enables the extra consistency checks, that all named dimensions are the same across all tensors.
-
-Without it, the checks will only be done at the level of individual tensors. e.g. 
-
-```python
-def func(x: TensorType["batch"], y: TensorType["batch"]):
-    pass
-
-func(torch.rand(5), torch.rand(7))
-```
-
-won't raise an error.  `rand(5)` matches `TensorType["batch"]` when considered in isolation, and `rand(7)` likewise matches `TensorType["batch"]` when considered in isolation.
-
-**How to indicate a scalar Tensor?**
-
-`TensorType[()]`
+`TensorType[()]`. Equivalently `TensorType[(), float]`, etc.
 
 **Are nested annotations of the form `Blahblah[Moreblah[TensorType[...]]]` supported?**
 
@@ -82,7 +48,7 @@ def func(x:  TensorType["dim1": ..., "dim2": ...],
 
 **Trying to use `...` is raising a `NotImplementedError`**
 
-Using `...` in a shape specification is currently only supported in the left-most places of a tensor shape. Supporting using `...` in other locations would be a fair bit more complicated.
+Using `...` in a shape specification is currently only supported in the left-most places of a tensor shape. Supporting using `...` in other locations would be a fair bit more complicated to write the logic for.
 
 **`TensorType[float]` corresponds to`float32` but `torch.rand(2).to(float)` produces `float64`**.
 
@@ -96,43 +62,41 @@ Python does provide a comprehensive typing system that we could have used instea
 
 ## Custom extensions
 
-Writing custom extensions is a breeze, by subclassing `TensorType`. For example this checks that the tensor has an additional attribute `foo`, which must be a string with value `"good-foo"`:
+Writing custom extensions is a breeze, by subclassing `torchtyping.TensorDetail`. For example this checks that the tensor has an additional attribute `foo`, which must be a string with value `"good-foo"`:
 
 ```python
-from torch import rand, tensor
-from torchtyping import TensorType
+from torch import rand, Tensor
+from torchtyping import TensorDetail, TensorType
 from typeguard import typechecked
-
-from typing import Any, Optional
 
 # Write the extension
 
-class FooType:
-    def __init__(self, value):
+class FooDetail(TensorDetail):
+    def __init__(self, *, value, **kwargs):
+        super().__init__(**kwargs)
         self.value = value
+        
+    def check(self, tensor: Tensor) -> bool:
+        return hasattr(tensor, "foo") and tensor.foo == self.foo
 
-
-class FooTensorType(TensorType):
-    foo: Optional[str] = None
-
-    @classmethod
-    def check(cls, instance: Any) -> bool:
-        check = super().check(instance)
-        if cls.foo is not None:
-            check = check and hasattr(instance, "foo") and instance.foo == cls.foo
-        return check
+    # reprs used in error messages when the check is failed
+    
+    def __repr__(self) -> str:
+        return f"FooDetail({self.value})""
 
     @classmethod
-    def getitem(cls, item: Any) -> dict[str, Any]:
-        if isinstance(item, FooType):
-            return {"foo": item.value}
-        else:
-            return super().getitem(item)
+    def tensor_repr(cls, tensor: Tensor) -> str:
+        # Should return a representation of the tensor with respect
+        # to what this detail is checking
+        if hasattr(tensor, "foo"):
+            return f"FooDetail({tensor.foo})"
+       	else:
+            return ""
 
 # Test the extension
 
 @typechecked
-def foo_checker(tensor: FooTensorType[float][FooType("good-foo")]):
+def foo_checker(tensor: TensorType[float, FooDetail("good-foo")]):
     pass
 
 
@@ -149,7 +113,7 @@ def invalid_foo_one():
 
 
 def invalid_foo_two():
-    x = tensor([1, 2])  # integer type
+    x = torch.rand(2).int()
     x.foo = "good-foo"
     foo_checker(x)
 ```
@@ -207,7 +171,7 @@ def func(x: TensorType[float]):
 **Checking shape and dtype at the same time:**
 
 ```python
-def func(x: TensorType[3, 4][float]):
+def func(x: TensorType[3, 4, float]):
     # x has shape (3, 4) and has dtype torch.float32
 ```
 

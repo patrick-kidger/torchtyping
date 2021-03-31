@@ -4,7 +4,9 @@ from torchtyping import TensorType
 from typeguard import typechecked
 
 
-@pytest.mark.torchtyping_patch_typeguard
+x = y = None
+
+
 def test_single():
     @typechecked
     def func1(x: TensorType["x"], y: TensorType["x"]):
@@ -48,7 +50,6 @@ def test_single():
         func7(rand(3))
 
 
-@pytest.mark.torchtyping_patch_typeguard
 def test_multiple():
     # Fun fact, this "wrong" func0 is actually a mistype of func1, that torchtyping
     # caught for me when I ran the tests!
