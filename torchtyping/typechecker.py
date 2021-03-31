@@ -9,6 +9,37 @@ from typing import Any, get_args, Type
 from typing import get_type_hints
 
 
+# TYPEGUARD PATCHER
+#######################
+# So there's quite a lot of moving pieces here.
+# The logic proceeds as follows.
+#
+# Calling patch_typeguard() just monkey-patches some of its functions and classes.
+#
+# typeguard uses a `_CallMemo` object to store information about each function that it
+# is checking: this is what allows us to perform function-level checking (consistency
+# of tensor shapes) rather than just argument-level checking (simple isinstance
+# checks).
+# So the first thing we do is enhance that with a couple extra slots to store our
+# information
+#
+# Second, we patch `check_type`. typeguard traverses the [] hierarchy, e.g. from
+# Tuple[List[int]] to List[int] to int, recursively calling `check_type`. By patching
+# `check_type` we can check for our `TensorType`s and record every value-type pair.
+# (Actually it's a bit more than that: we record some names for use in the error
+# messages.) These are recorded in our enhanced `_CallMemo` object.
+#
+# (Incidentally we also have to patch typeguard's use of typing.get_type_hints, so that
+# our annotations aren't stripped.)
+#
+# Then we patch `check_argument_types` and `check_return_type`, to perform our extra
+# TensorType checking. This is the same checking in both cases so we factor that out
+# into _check_memo.
+#
+# _check_memo performs the real logic of the checking here. This looks at all the
+# recorded value-type pairs and checks for any inconsistencies.
+
+
 def _to_string(name, detail_reprs: list[str]) -> str:
     assert len(detail_reprs) > 0
     string = name + "["
@@ -51,7 +82,11 @@ def _check_tensor(
 
 def _check_memo(memo):
     ###########
-    # Parse the tensors and figure out the extra hinting
+    # Parse the tensors and figure out the sizes of all labelled
+    # dimensions.
+    # This also performs some (and in practice most) of the consistency
+    # checks. However its job is primarily one of assigning sizes to labels.
+    # The final checking of the inferred sizes is performed afterwards.
     ###########
 
     # ordered set
@@ -67,7 +102,6 @@ def _check_memo(memo):
                     num_free_ellipsis += 1
             if num_free_ellipsis <= 1:
                 reversed_shape = enumerate(reversed(shape))
-                # These aren't all necessarily of the same size.
                 for dim in reversed(detail.dims):
                     try:
                         reverse_dim_index, size = next(reversed_shape)
@@ -116,13 +150,23 @@ def _check_memo(memo):
                                 # Therefore the number of dimensions the ellipsis
                                 # corresponds to, is the number of dimensions
                                 # remaining.
+                                forward_index = 0
+                                for forward_dim in detail.dims:  # now iterate forwards
+                                    if forward_dim is dim:
+                                        break
+                                    assert forward_dim.size is ...
+                                    forward_index += len(
+                                        memo.name_to_shape[forward_dim.name]
+                                    )
                                 if reverse_dim_index == 0:
                                     # since [:-0] doesn't work
-                                    clip_shape = shape
+                                    end_index = None
                                 else:
-                                    clip_shape = shape[:-reverse_dim_index]
+                                    end_index = -reverse_dim_index
+                                clip_shape = shape[forward_index:end_index]
                                 memo.name_to_shape[dim.name] = tuple(clip_shape)
-                                break
+                                for _ in range(len(clip_shape) - 1):
+                                    next(reversed_shape)
                             else:
                                 reversed_shape_piece = [size]
                                 for _ in range(len(lookup_shape) - 1):
@@ -131,17 +175,18 @@ def _check_memo(memo):
                                     except StopIteration:
                                         break
                                     reversed_shape_piece.append(size)
-                                
+
                                 shape_piece = tuple(reversed(reversed_shape_piece))
                                 if lookup_shape != shape_piece:
                                     raise TypeError(
-                                        f"Dimension group '{dim.name}' of inconsistent shape. Got "
-                                        f"both {shape_piece} and {lookup_shape}."
+                                        f"Dimension group '{dim.name}' of "
+                                        f"inconsistent shape. Got both {shape_piece} "
+                                        f"and {lookup_shape}."
                                     )
 
                         # else (dim.size an integer) branch not included. We don't
                         # check individual dim.size == size here, that's done in
-                        # the tensor check. Here we're just concerned with 
+                        # the tensor check. Here we're just concerned with
                         # resolving the size of names.
 
                 del shape_info[argname, shape, detail]
@@ -150,11 +195,26 @@ def _check_memo(memo):
             if len(shape_info):
                 names = {argname for argname, _, _ in shape_info}
                 raise TypeError(
-                    f"Could not resolve the size of all `...` in {names}: the specification is ambiguous."
+                    f"Could not resolve the size of all `...` in {names}. Either:\n"
+                    "(1) the specification is ambiguous. For example "
+                    "`func(tensor: TensorType['x': ..., 'y': ...])`.\n"
+                    "(2) or repeated named `...` are used without being able to "
+                    "resolve the size of those named `...` via another argument "
+                    "For example `func(tensor: TensorType['x': ..., 'x': ...])`. "
+                    "(But `func(tensor1: TensorType['x': ..., 'x': ...], tensor2: "
+                    "TensorType['x': ...])` would be fine.)\n"
+                    "\n"
+                    "Removing the names of the `...` should suffice to resolve this "
+                    "error. (But will of course remove that checking as well.)"
                 )
 
     ###########
-    # Do the extra checking with the extra tensor details filled in.
+    # Do the final checking with the inferred sizes filled in.
+    # In practice, malformed inputs will usually trip one of the
+    # checks in the previous logic, so this block doesn't actually raise
+    # errors very often. (In 1/37 tests at time of writing.)
+    # A potential performance improvement might be to integrate it into
+    # the previous block.
     ###########
 
     for argname, value, cls_name, detail in memo.value_info:
@@ -173,7 +233,9 @@ def _check_memo(memo):
                     continue
             dims.append(_Dim(name=dim.name, size=size))
         detail = detail.update(dims=tuple(dims))
-        _check_tensor(argname, value, torch.Tensor, {"cls_name": cls_name, "details": [detail]})
+        _check_tensor(
+            argname, value, torch.Tensor, {"cls_name": cls_name, "details": [detail]}
+        )
 
 
 unpatched_typeguard = True
@@ -230,12 +292,10 @@ def patch_typeguard():
                 else:
                     is_torchtyping_annotation = False
             if is_torchtyping_annotation:
-                # We perform a check here -- despite having the additional more
-                # fully-fledged checks below -- for two reasons.
-                # One: we want to check return values as well. The argument checking
-                # below doesn't cover this.
-                # Two: we want to check that `value` is in fact a tensor before we
-                # access its `shape` field on the next line.
+                # We call _check_tensor here -- despite calling _check_tensor again
+                # once we've seen every argument and filled in the shape details --
+                # just because we want to check that `value` is in fact a tensor before
+                # we access its `shape` field on the next line.
                 _check_tensor(argname, value, base_cls, metadata)
                 for detail in metadata["details"]:
                     if isinstance(detail, ShapeDetail):
@@ -257,7 +317,10 @@ def patch_typeguard():
                 memo.name_to_size = {}
                 memo.name_to_shape = {}
                 retval = _check_argument_types(*args, **kwargs)
-                _check_memo(memo)
+                try:
+                    _check_memo(memo)
+                except TypeError as exc:  # suppress long traceback
+                    raise TypeError(*exc.args) from None
                 return retval
 
         def check_return_type(*args, **kwargs):
@@ -271,7 +334,10 @@ def patch_typeguard():
                 # Do _not_ set memo.name_to_size or memo.name_to_shape, as we want to
                 # keep using the same sizes inferred from the arguments.
                 retval = _check_return_type(*args, **kwargs)
-                _check_memo(memo)
+                try:
+                    _check_memo(memo)
+                except TypeError as exc:  # suppress long traceback
+                    raise TypeError(*exc.args) from None
                 return retval
 
         typeguard._CallMemo = _CallMemo

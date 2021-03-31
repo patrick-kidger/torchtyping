@@ -156,7 +156,11 @@ class TensorType(metaclass=_TensorTypeMeta):
 
         assert len(details) > 0
 
+        # Frozen dict needed for Union[TensorType[...], ...], as Union hashes its
+        # arguments.
         return Annotated[
             cls.base_cls,
-            frozendict({"__torchtyping__": True, "details": details, "cls_name": cls.__name__}),
+            frozendict(
+                {"__torchtyping__": True, "details": details, "cls_name": cls.__name__}
+            ),
         ]

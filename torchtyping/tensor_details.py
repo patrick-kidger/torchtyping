@@ -4,8 +4,6 @@ import abc
 import collections
 import torch
 
-from .utils import frozendict
-
 from typing import Optional, Type, Union
 
 
@@ -32,7 +30,8 @@ _no_name = object()
 
 # inheriting from typing.NamedTuple crashes typeguard
 class _Dim(collections.namedtuple("_Dim", ["name", "size"])):
-    # None corresponds to a name not being set. no_name corresponds to us not caring whether a name is set.
+    # None corresponds to a name not being set. no_name corresponds to us not caring
+    # whether a name is set.
     name: Union[None, str, Type[_no_name]]
     size: Union[ellipsis, int]
 
@@ -90,7 +89,11 @@ class ShapeDetail(TensorDetail):
                 # So once we hit one we're done.
                 break
 
-            if self.check_names and self_name is not _no_name and self_name != tensor_name:
+            if (
+                self.check_names
+                and self_name is not _no_name
+                and self_name != tensor_name
+            ):
                 return False
             if self_size not in (-1, tensor_size):
                 return False
@@ -167,7 +170,7 @@ class _FloatDetail(TensorDetail):
 # named_detail is special-cased and consumed by TensorType.
 # It's a bit of an odd exception.
 # It's only a TensorDetail for consistency, as the other
-# extra flags that get passed are TensorDetails.    
+# extra flags that get passed are TensorDetails.
 class _NamedTensorDetail(TensorDetail):
     def __repr__(self) -> str:
         raise RuntimeError
