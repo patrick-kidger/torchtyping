@@ -5,7 +5,7 @@ import torch
 from .tensor_details import (
     _Dim,
     _no_name,
-    named_detail,
+    is_named,
     DtypeDetail,
     LayoutDetail,
     ShapeDetail,
@@ -14,9 +14,6 @@ from .tensor_details import (
 from .utils import frozendict
 
 from typing import Annotated, Any, NoReturn
-
-
-ellipsis = type(...)
 
 
 # Not Type[Annotated...] as we want to use this in instance checks.
@@ -89,7 +86,7 @@ class TensorType(metaclass=_TensorTypeMeta):
         layouts = []
         details = []
         for item_i in item:
-            if isinstance(item_i, (int, str, slice, ellipsis)):
+            if isinstance(item_i, (int, str, slice)) or item_i in (None, ...):
                 item_i = cls._convert_shape_element(item_i)
                 if item_i.size is ...:
                     # Supporting an arbitrary number of Ellipsis in arbitrary
@@ -120,7 +117,7 @@ class TensorType(metaclass=_TensorTypeMeta):
                 dtypes.append(cls._convert_dtype_element(item_i))
             elif isinstance(item_i, torch.layout):
                 layouts.append(item_i)
-            elif item_i is named_detail:
+            elif item_i is is_named:
                 check_names = True
             elif isinstance(item_i, TensorDetail):
                 details.append(item_i)

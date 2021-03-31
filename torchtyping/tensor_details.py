@@ -64,7 +64,7 @@ class ShapeDetail(TensorDetail):
         else:
             out = repr(tuple(self.dims))[1:-1]
         if self.check_names:
-            out += ", named_detail"
+            out += ", is_named"
         return out
 
     def check(self, tensor: torch.Tensor) -> bool:
@@ -157,17 +157,17 @@ class LayoutDetail(TensorDetail):
 
 class _FloatDetail(TensorDetail):
     def __repr__(self) -> str:
-        return "float_detail"
+        return "is_float"
 
     def check(self, tensor: torch.Tensor) -> bool:
         return tensor.is_floating_point()
 
     @classmethod
     def tensor_repr(cls, tensor: torch.Tensor) -> str:
-        return "float_detail" if tensor.is_floating_point() else ""
+        return "is_float" if tensor.is_floating_point() else ""
 
 
-# named_detail is special-cased and consumed by TensorType.
+# is_named is special-cased and consumed by TensorType.
 # It's a bit of an odd exception.
 # It's only a TensorDetail for consistency, as the other
 # extra flags that get passed are TensorDetails.
@@ -183,5 +183,5 @@ class _NamedTensorDetail(TensorDetail):
         raise RuntimeError
 
 
-float_detail = _FloatDetail()  # singleton flag
-named_detail = _NamedTensorDetail()  # singleton flag
+is_float = _FloatDetail()  # singleton flag
+is_named = _NamedTensorDetail()  # singleton flag

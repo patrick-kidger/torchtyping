@@ -4,9 +4,9 @@
 
 **The runtime checking isn't working!**
 
-Make sure that you've enable typeguard, either by decorating the function with `typeguard.typechecked`, or by using `typeguard.importhook.install_import_hook`, or by using the pytest command line flags listed in the main [README](./README.md).
+First make sure that you're calling `torchtyping.patch_typeguard`.
 
-Then make sure that you're calling `torchtyping.patch_typeguard`.
+Then sure that you've enabled `typeguard`, either by decorating the function with `typeguard.typechecked`, or by using `typeguard.importhook.install_import_hook`, or by using the pytest command line flags listed in the main [README](./README.md). Make sure these happen after calling `torchtyping.patch_typeguard`.
 
 If you have done all of that, then feel free to raise an issue.
 
@@ -178,7 +178,7 @@ def func(x: TensorType[3, 4, float]):
 **Checking names for dimensions as per [named tensors](https://pytorch.org/docs/stable/named_tensor.html):**
 
 ```python
-def func(x: TensorType["a": 3, "b", named_detail]):
+def func(x: TensorType["a": 3, "b", is_named]):
     # x has has names ("a", "b")
     # x has shape (3, Any)
 ```

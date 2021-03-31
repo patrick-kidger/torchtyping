@@ -87,6 +87,9 @@ def _check_memo(memo):
     # This also performs some (and in practice most) of the consistency
     # checks. However its job is primarily one of assigning sizes to labels.
     # The final checking of the inferred sizes is performed afterwards.
+    #
+    # This logic is a bit hairy. Most of the complexity comes from
+    # supporting `...` arbitrary numbers of dimensions.
     ###########
 
     # ordered set
@@ -115,10 +118,14 @@ def _check_memo(memo):
                                 else:
                                     if lookup_shape != ():
                                         raise TypeError(
-                                            f"Dimension group '{name}' of inconsistent shape. Got "
-                                            f"both () and {lookup_shape}."
+                                            f"Dimension group '{dim.name}' of "
+                                            f"inconsistent shape. Got both () and "
+                                            f"{lookup_shape}."
                                         )
                         else:
+                            # I don't think it's possible to get here, as the earlier
+                            # call to _check_tensor in check_type should catch
+                            # this case.
                             raise TypeError(
                                 f"{argname} has {len(shape)} dimensions but type "
                                 "requires more than this."
@@ -168,7 +175,9 @@ def _check_memo(memo):
                                 for _ in range(len(clip_shape) - 1):
                                     next(reversed_shape)
                             else:
-                                reversed_shape_piece = [size]
+                                reversed_shape_piece = []
+                                if len(lookup_shape) >= 1:
+                                    reversed_shape_piece.append(size)
                                 for _ in range(len(lookup_shape) - 1):
                                     try:
                                         _, size = next(reversed_shape)

@@ -3,10 +3,10 @@
 # Still, they're provided here -- public but not documented --
 # for anyone who wants to inherit from one of them.
 from .tensor_details import (
-    float_detail,
     DtypeDetail,
+    is_float,
+    is_named,
     LayoutDetail,
-    named_detail,
     ShapeDetail,
     TensorDetail,
 )
