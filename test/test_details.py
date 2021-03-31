@@ -107,39 +107,39 @@ def test_float_tensor():
 
 def test_named_tensor():
     @typeguard.typechecked
-    def _named_a_dim_checker(x: TensorType["a", is_named]):
+    def _named_a_dim_checker(x: TensorType["dim1", is_named]):
         pass
 
     @typeguard.typechecked
-    def _named_ab_dim_checker(x: TensorType["a", "b", is_named]):
+    def _named_ab_dim_checker(x: TensorType["dim1", "dim2", is_named]):
         pass
 
     @typeguard.typechecked
-    def _named_abc_dim_checker(x: TensorType["a", "b", "c", is_named]):
+    def _named_abc_dim_checker(x: TensorType["dim1", "dim2", "dim3", is_named]):
         pass
 
     @typeguard.typechecked
-    def _named_cb_dim_checker(x: TensorType["c", "b", is_named]):
+    def _named_cb_dim_checker(x: TensorType["dim3", "dim2", is_named]):
         pass
 
     @typeguard.typechecked
-    def _named_am1_dim_checker(x: TensorType["a", -1, is_named]):
+    def _named_am1_dim_checker(x: TensorType["dim1", -1, is_named]):
         pass
 
     @typeguard.typechecked
-    def _named_m1b_dim_checker(x: TensorType[-1, "b", is_named]):
+    def _named_m1b_dim_checker(x: TensorType[-1, "dim2", is_named]):
         pass
 
     @typeguard.typechecked
-    def _named_abm1_dim_checker(x: TensorType["a", "b", -1, is_named]):
+    def _named_abm1_dim_checker(x: TensorType["dim1", "dim2", -1, is_named]):
         pass
 
     @typeguard.typechecked
-    def _named_m1bm1_dim_checker(x: TensorType[-1, "b", -1, is_named]):
+    def _named_m1bm1_dim_checker(x: TensorType[-1, "dim2", -1, is_named]):
         pass
 
     x = torch.rand(3, 4)
-    named_x = torch.rand(3, 4, names=("a", "b"))
+    named_x = torch.rand(3, 4, names=("dim1", "dim2"))
 
     with pytest.raises(TypeError):
         _named_ab_dim_checker(x)
@@ -175,15 +175,15 @@ def test_named_tensor():
 
 def test_named_float_tensor():
     @typeguard.typechecked
-    def func(x: TensorType["a", "b":3, is_float, is_named]):
+    def func(x: TensorType["dim1", "dim2":3, is_float, is_named]):
         pass
 
-    x = torch.rand(2, 3, names=("a", "b"))
-    y = torch.rand(2, 2, names=("a", "b"))
-    z = torch.rand(2, 2, names=("a", "c"))
+    x = torch.rand(2, 3, names=("dim1", "dim2"))
+    y = torch.rand(2, 2, names=("dim1", "dim2"))
+    z = torch.rand(2, 2, names=("dim1", "dim3"))
     w = torch.rand(2, 3)
-    w1 = torch.rand(2, 2, names=("a", None))
-    w2 = torch.rand(2, 3, names=("a", "b")).int()
+    w1 = torch.rand(2, 2, names=("dim1", None))
+    w2 = torch.rand(2, 3, names=("dim1", "dim2")).int()
 
     func(x)
     with pytest.raises(TypeError):
