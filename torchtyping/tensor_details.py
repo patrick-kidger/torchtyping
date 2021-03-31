@@ -4,7 +4,9 @@ import abc
 import collections
 import torch
 
-from typing import Optional, Union
+from .utils import frozendict
+
+from typing import Optional, Type, Union
 
 
 ellipsis = type(...)
@@ -25,13 +27,17 @@ class TensorDetail(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
+_no_name = object()
+
+
 # inheriting from typing.NamedTuple crashes typeguard
 class _Dim(collections.namedtuple("_Dim", ["name", "size"])):
-    name: Union[None, str]
+    # None corresponds to a name not being set. no_name corresponds to us not caring whether a name is set.
+    name: Union[None, str, Type[_no_name]]
     size: Union[ellipsis, int]
 
     def __repr__(self) -> str:
-        if self.name is None:
+        if self.name is _no_name:
             if self.size is ...:
                 return "..."
             else:
@@ -52,7 +58,15 @@ class ShapeDetail(TensorDetail):
         self.check_names = check_names
 
     def __repr__(self) -> str:
-        return repr(tuple(self.dims))
+        if len(self.dims) == 0:
+            out = "()"
+        elif len(self.dims) == 1:
+            out = repr(self.dims[0])
+        else:
+            out = repr(tuple(self.dims))[1:-1]
+        if self.check_names:
+            out += ", named_detail"
+        return out
 
     def check(self, tensor: torch.Tensor) -> bool:
         self_names = [self_dim.name for self_dim in self.dims]
@@ -76,7 +90,7 @@ class ShapeDetail(TensorDetail):
                 # So once we hit one we're done.
                 break
 
-            if self.check_names and self_name is not None and self_name != tensor_name:
+            if self.check_names and self_name is not _no_name and self_name != tensor_name:
                 return False
             if self_size not in (-1, tensor_size):
                 return False
@@ -86,9 +100,12 @@ class ShapeDetail(TensorDetail):
     @classmethod
     def tensor_repr(cls, tensor: torch.Tensor) -> str:
         dims = []
+        check_names = any(name is not None for name in tensor.names)
         for name, size in zip(tensor.names, tensor.shape):
+            if not check_names:
+                name = _no_name
             dims.append(_Dim(name=name, size=size))
-        return repr(cls(dims=dims))
+        return repr(cls(dims=dims, check_names=check_names))
 
     def update(
         self,
@@ -105,6 +122,7 @@ class ShapeDetail(TensorDetail):
 class DtypeDetail(TensorDetail):
     def __init__(self, *, dtype, **kwargs) -> None:
         super().__init__(**kwargs)
+        assert isinstance(dtype, torch.dtype)
         self.dtype = dtype
 
     def __repr__(self) -> str:
@@ -115,7 +133,7 @@ class DtypeDetail(TensorDetail):
 
     @classmethod
     def tensor_repr(cls, tensor: torch.Tensor) -> str:
-        return repr(cls(tensor.dtype))
+        return repr(cls(dtype=tensor.dtype))
 
 
 class LayoutDetail(TensorDetail):
@@ -131,7 +149,7 @@ class LayoutDetail(TensorDetail):
 
     @classmethod
     def tensor_repr(cls, tensor: torch.Tensor) -> str:
-        return repr(cls(tensor.layout))
+        return repr(cls(layout=tensor.layout))
 
 
 class _FloatDetail(TensorDetail):
@@ -146,12 +164,14 @@ class _FloatDetail(TensorDetail):
         return "float_detail" if tensor.is_floating_point() else ""
 
 
+# named_detail is special-cased and consumed by TensorType.
+# It's a bit of an odd exception.
+# It's only a TensorDetail for consistency, as the other
+# extra flags that get passed are TensorDetails.    
 class _NamedTensorDetail(TensorDetail):
     def __repr__(self) -> str:
-        return "named_detail"
+        raise RuntimeError
 
-    # named_detail is special-cased and consumed by TensorType.
-    # It's a bit of an odd exception.
     def check(self, tensor: torch.Tensor) -> bool:
         raise RuntimeError
 

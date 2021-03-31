@@ -9,9 +9,9 @@ good = foo = None
 
 
 class FooDetail(TensorDetail):
-    def __init__(self, value):
+    def __init__(self, foo):
         super().__init__()
-        self.value = value
+        self.foo = foo
 
     def check(self, tensor: Tensor) -> bool:
         return hasattr(tensor, "foo") and tensor.foo == self.foo
@@ -19,7 +19,7 @@ class FooDetail(TensorDetail):
     # reprs used in error messages when the check is failed
 
     def __repr__(self) -> str:
-        return f"FooDetail({self.value})"
+        return f"FooDetail({self.foo})"
 
     @classmethod
     def tensor_repr(cls, tensor: Tensor) -> str:

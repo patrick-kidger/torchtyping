@@ -114,17 +114,29 @@ def test_multiple_ellipsis():
     def func(
         x: TensorType["dim1":..., "dim2":...], y: TensorType["dim2":...]
     ) -> TensorType["dim1":...]:
-        sum_dims = [x - 1 for x in range(y.dim())]
+        sum_dims = [-i - 1 for i in range(y.dim())]
         return (x * y).sum(dim=sum_dims)
 
-    func(torch.rand(1, 2), torch.rand(2))
+    #func(torch.rand(1, 2), torch.rand(2))
     func(torch.rand(3, 4, 5, 9), torch.rand(5, 9))
+    func(torch.rand(3, 4, 11, 5, 9), torch.rand(5, 9))
+    func(torch.rand(3, 4, 11, 5, 9), torch.rand(11, 5, 9))
     with pytest.raises(TypeError):
         func(torch.rand(1), torch.rand(2))
     with pytest.raises(TypeError):
         func(torch.rand(1, 3, 5), torch.rand(3))
     with pytest.raises(TypeError):
         func(torch.rand(1, 4), torch.rand(1, 1, 4))
+        
+    @typechecked
+    def func(
+        x: TensorType["dim2":...], y: TensorType["dim1":..., "dim2":...]
+    ) -> TensorType["dim1":...]:
+        sum_dims = [-i - 1 for i in range(x.dim())]
+        return (x * y).sum(dim=sum_dims)
+        
+    with pytest.raises(TypeError):
+        func(torch.rand(1, 1, 4), torch.rand(1, 4))
 
 
 def test_nested_types():
@@ -136,3 +148,15 @@ def test_nested_types():
     func((torch.rand(3, 5, 4), torch.rand(5)))
     with pytest.raises(TypeError):
         func((torch.rand(3, 1, 4), torch.rand(2)))
+
+
+def test_no_getitem():
+    @typechecked
+    def func(x: TensorType, y: TensorType):
+        pass
+        
+    func(torch.rand(2), torch.rand(2))
+    with pytest.raises(TypeError):
+        func(torch.rand(2), None)
+    with pytest.raises(TypeError):
+        func(torch.rand(2), [3, 4])

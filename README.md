@@ -34,7 +34,7 @@ pip install git+https://github.com/patrick-kidger/torchtyping.git
 
 Requires Python 3.9+.
 
-## Details
+## Usage
 
 `torchtyping` allows for type annotating:
 
@@ -88,6 +88,8 @@ Each of `shape`, `dtype`, `layout`, `details` are optional.
   - A `...`: An arbitrary number of dimensions of any sizes.
   - A `str: int` pair (technically it's a slice), combining both `str` and `int` behaviour. (Just a `str` on its own is equivalent to `str: -1`.)
   - A `str: ...` pair, in which case the multiple dimensions corresponding to `...` will be bound to the name specified by `str`, and again checked for consistency between arguments.
+  - `None`, which when used in conjunction with `named_detail` below, indicates a dimension that must _not_ have a name in the sense of [named tensors](https://pytorch.org/docs/stable/named_tensor.html).
+  - A `None: int` pair, combining both `None` and `int` behaviour. (Just a `None` on its own is equivalent to `None: -1`.)
   - Any tuple of the above, e.g. `TensorType["batch": ..., "length": 10, "channels", -1]`
 - The `dtype` argument can be any of:
   - `torch.float32`, `torch.float64` etc.
@@ -118,5 +120,6 @@ pytest --torchtyping-patch-typeguard --typeguard-packages="your_package_here"
 See the [further documentation](./FURTHER-DOCUMENTATION.md) for:
 
 - FAQ;
+  - Including how to easily silence spurious flake8 errors.
 - How to write custom extensions to `torchtyping`;
 - More examples.

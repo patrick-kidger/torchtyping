@@ -4,12 +4,14 @@ import torch
 
 from .tensor_details import (
     _Dim,
+    _no_name,
     named_detail,
     DtypeDetail,
     LayoutDetail,
     ShapeDetail,
     TensorDetail,
 )
+from .utils import frozendict
 
 from typing import Annotated, Any, NoReturn
 
@@ -40,17 +42,23 @@ class TensorType(metaclass=_TensorTypeMeta):
     @classmethod
     def _convert_shape_element(cls, item_i: Any) -> _Dim:
         if isinstance(item_i, int) and not isinstance(item_i, bool):
-            return _Dim(name=None, size=item_i)
+            return _Dim(name=_no_name, size=item_i)
         elif isinstance(item_i, str):
             return _Dim(name=item_i, size=-1)
+        elif item_i is None:
+            return _Dim(name=None, size=-1)
         elif isinstance(item_i, slice):
             if item_i.step is not None:
                 cls._type_error(item_i)
-            if item_i.start is None and item_i.stop is None:
+            if item_i.start is not None and not isinstance(item_i.start, str):
+                cls._type_error(item_i)
+            if item_i.stop is not ... and not isinstance(item_i.stop, int):
+                cls._type_error(item_i)
+            if item_i.start is None and item_i.stop is ...:
                 cls._type_error(item_i)
             return _Dim(name=item_i.start, size=item_i.stop)
         elif item_i is ...:
-            return _Dim(name=None, size=...)
+            return _Dim(name=_no_name, size=...)
         else:
             cls._type_error(item_i)
 
@@ -109,13 +117,13 @@ class TensorType(metaclass=_TensorTypeMeta):
                 else:
                     cls._type_error(item_i)
             elif item_i in (int, bool, float) or isinstance(item_i, torch.dtype):
-                dtypes.append(item_i)
+                dtypes.append(cls._convert_dtype_element(item_i))
             elif isinstance(item_i, torch.layout):
                 layouts.append(item_i)
-            elif isinstance(item_i, TensorDetail):
-                details.append(item_i)
             elif item_i is named_detail:
                 check_names = True
+            elif isinstance(item_i, TensorDetail):
+                details.append(item_i)
             else:
                 cls._type_error(item_i)
 
@@ -144,11 +152,11 @@ class TensorType(metaclass=_TensorTypeMeta):
         else:
             raise TypeError("Cannot have multiple layouts.")
 
-        details = pre_details + details
+        details = tuple(pre_details + details)
 
         assert len(details) > 0
 
         return Annotated[
             cls.base_cls,
-            {"__torchtyping__": True, "details": details, "name": cls.__name__},
+            frozendict({"__torchtyping__": True, "details": details, "cls_name": cls.__name__}),
         ]

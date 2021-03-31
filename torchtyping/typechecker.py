@@ -2,7 +2,7 @@ import inspect
 import torch
 import typeguard
 
-from .tensor_details import _Dim, ShapeDetail
+from .tensor_details import _Dim, _no_name, ShapeDetail
 from .tensor_type import _AnnotatedType
 
 from typing import Any, get_args, Type
@@ -29,11 +29,11 @@ def _check_tensor(
         not detail.check(value) for detail in details
     ):
         expected_string = _to_string(
-            metadata["name"], [repr(detail) for detail in details]
+            metadata["cls_name"], [repr(detail) for detail in details]
         )
         if isinstance(value, torch.Tensor):
             given_string = _to_string(
-                metadata["name"], [detail.tensor_repr(value) for detail in details]
+                metadata["cls_name"], [detail.tensor_repr(value) for detail in details]
             )
         else:
             value = type(value)
@@ -49,21 +49,6 @@ def _check_tensor(
         )
 
 
-def _handle_ellipsis_size(
-    name: str, name_to_shape: dict[str, tuple[int]], shape: tuple[int]
-):
-    try:
-        lookup_shape = name_to_shape[name]
-    except KeyError:
-        name_to_shape[name] = shape
-    else:
-        if lookup_shape != shape:
-            raise TypeError(
-                f"Dimension group '{name}' of inconsistent shape. Got "
-                f"both {shape} and {lookup_shape}."
-            )
-
-
 def _check_memo(memo):
     ###########
     # Parse the tensors and figure out the extra hinting
@@ -72,7 +57,7 @@ def _check_memo(memo):
     # ordered set
     shape_info = {
         (argname, value.shape, detail): None
-        for argname, value, name, detail in memo.value_info
+        for argname, value, _, detail in memo.value_info
     }
     while len(shape_info):
         for argname, shape, detail in shape_info:
@@ -81,22 +66,31 @@ def _check_memo(memo):
                 if dim.size is ... and dim.name not in memo.name_to_shape:
                     num_free_ellipsis += 1
             if num_free_ellipsis <= 1:
-                reversed_shape = reversed(shape)
+                reversed_shape = enumerate(reversed(shape))
                 # These aren't all necessarily of the same size.
-                for reverse_dim_index, dim in enumerate(reversed(detail.dims)):
+                for dim in reversed(detail.dims):
                     try:
-                        size = next(reversed_shape)
+                        reverse_dim_index, size = next(reversed_shape)
                     except StopIteration:
                         if dim.size is ...:
-                            if dim.name is not None:
-                                _handle_ellipsis_size(dim.name, memo.name_to_shape, ())
+                            if dim.name not in (None, _no_name):
+                                try:
+                                    lookup_shape = memo.name_to_shape[dim.name]
+                                except KeyError:
+                                    memo.name_to_shape[dim.name] = ()
+                                else:
+                                    if lookup_shape != ():
+                                        raise TypeError(
+                                            f"Dimension group '{name}' of inconsistent shape. Got "
+                                            f"both () and {lookup_shape}."
+                                        )
                         else:
                             raise TypeError(
                                 f"{argname} has {len(shape)} dimensions but type "
                                 "requires more than this."
                             )
 
-                    if dim.name is not None:
+                    if dim.name not in (None, _no_name):
                         if dim.size == -1:
                             try:
                                 lookup_size = memo.name_to_size[dim.name]
@@ -114,24 +108,40 @@ def _check_memo(memo):
                                         f"{lookup_size}."
                                     )
                         elif dim.size is ...:
-                            if reverse_dim_index == 0:
-                                # since [:-0] doesn't work
-                                clip_shape = shape
+                            try:
+                                lookup_shape = memo.name_to_shape[dim.name]
+                            except KeyError:
+                                # Can only get here if we're the single free
+                                # ellipsis.
+                                # Therefore the number of dimensions the ellipsis
+                                # corresponds to, is the number of dimensions
+                                # remaining.
+                                if reverse_dim_index == 0:
+                                    # since [:-0] doesn't work
+                                    clip_shape = shape
+                                else:
+                                    clip_shape = shape[:-reverse_dim_index]
+                                memo.name_to_shape[dim.name] = tuple(clip_shape)
+                                break
                             else:
-                                clip_shape = shape[:-reverse_dim_index]
-                            _handle_ellipsis_size(
-                                dim.name, memo.name_to_shape, clip_shape
-                            )
-                            # Can only get here if we're the single free
-                            # ellipsis.
-                            # Therefore the number of dimensions it
-                            # corresponds to is the number of dimensions
-                            # remaining.
-                            break
+                                reversed_shape_piece = [size]
+                                for _ in range(len(lookup_shape) - 1):
+                                    try:
+                                        _, size = next(reversed_shape)
+                                    except StopIteration:
+                                        break
+                                    reversed_shape_piece.append(size)
+                                
+                                shape_piece = tuple(reversed(reversed_shape_piece))
+                                if lookup_shape != shape_piece:
+                                    raise TypeError(
+                                        f"Dimension group '{dim.name}' of inconsistent shape. Got "
+                                        f"both {shape_piece} and {lookup_shape}."
+                                    )
 
-                        # else (dim.size an integer) branch not included. We
-                        # don't check if dim.size == size here, that's done in
-                        # the instance check. Here we're just concerned with
+                        # else (dim.size an integer) branch not included. We don't
+                        # check individual dim.size == size here, that's done in
+                        # the tensor check. Here we're just concerned with 
                         # resolving the size of names.
 
                 del shape_info[argname, shape, detail]
@@ -140,31 +150,30 @@ def _check_memo(memo):
             if len(shape_info):
                 names = {argname for argname, _, _ in shape_info}
                 raise TypeError(
-                    f"Could not resolve the size of all `...` in arguments {names}."
+                    f"Could not resolve the size of all `...` in {names}: the specification is ambiguous."
                 )
 
     ###########
     # Do the extra checking with the extra tensor details filled in.
     ###########
 
-    for argname, value, name, detail in memo.value_info:
+    for argname, value, cls_name, detail in memo.value_info:
         dims = []
         for dim in detail.dims:
-            name = dim.name
             size = dim.size
-            if name is not None:
+            if dim.name not in (None, _no_name):
                 if size == -1:
-                    size = memo.name_to_size[name]
+                    size = memo.name_to_size[dim.name]
                 elif size is ...:
                     # This assumes that named Ellipses only occur to the
                     # right of unnamed Ellipses, to avoid filling in
                     # Ellipses that occur to the left of other Ellipses.
-                    for size in memo.name_to_shape[name]:
-                        dims.append(_Dim(name=None, size=size))
+                    for size in memo.name_to_shape[dim.name]:
+                        dims.append(_Dim(name=_no_name, size=size))
                     continue
-            dims.append(_Dim(name=name, size=size))
+            dims.append(_Dim(name=dim.name, size=size))
         detail = detail.update(dims=tuple(dims))
-        _check_tensor(argname, value, torch.Tensor, {"name": name, "details": [detail]})
+        _check_tensor(argname, value, torch.Tensor, {"cls_name": cls_name, "details": [detail]})
 
 
 unpatched_typeguard = True
@@ -184,7 +193,7 @@ def patch_typeguard():
                 "name_to_size",
                 "name_to_shape",
             )
-            value_info: list[tuple[str, torch.Tensor, dict[str, Any]]]
+            value_info: list[tuple[str, torch.Tensor, str, dict[str, Any]]]
             name_to_size: dict[str, int]
             name_to_shape: dict[str, tuple[int]]
 
@@ -231,7 +240,7 @@ def patch_typeguard():
                 for detail in metadata["details"]:
                     if isinstance(detail, ShapeDetail):
                         memo.value_info.append(
-                            (argname, value, metadata["name"], detail)
+                            (argname, value, metadata["cls_name"], detail)
                         )
                         break
 
