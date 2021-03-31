@@ -113,7 +113,7 @@ def invalid_foo_one():
 
 
 def invalid_foo_two():
-    x = torch.rand(2).int()
+    x = rand(2).int()
     x.foo = "good-foo"
     foo_checker(x)
 ```

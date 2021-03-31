@@ -5,7 +5,7 @@ import typeguard
 from .tensor_details import _Dim, ShapeDetail
 from .tensor_type import _AnnotatedType
 
-from typing import Any, get_args, Iterable, Type
+from typing import Any, get_args, Type
 from typing import get_type_hints
 
 
@@ -68,9 +68,12 @@ def _check_memo(memo):
     ###########
     # Parse the tensors and figure out the extra hinting
     ###########
-    
+
     # ordered set
-    shape_info = {(argname, value.shape, detail): None for argname, value, name, detail in memo.value_info}
+    shape_info = {
+        (argname, value.shape, detail): None
+        for argname, value, name, detail in memo.value_info
+    }
     while len(shape_info):
         for argname, shape, detail in shape_info:
             num_free_ellipsis = 0
@@ -143,7 +146,7 @@ def _check_memo(memo):
     ###########
     # Do the extra checking with the extra tensor details filled in.
     ###########
-    
+
     for argname, value, name, detail in memo.value_info:
         dims = []
         for dim in detail.dims:
@@ -227,7 +230,9 @@ def patch_typeguard():
                 _check_tensor(argname, value, base_cls, metadata)
                 for detail in metadata["details"]:
                     if isinstance(detail, ShapeDetail):
-                        memo.value_info.append((argname, value, metadata['name'], detail))
+                        memo.value_info.append(
+                            (argname, value, metadata["name"], detail)
+                        )
                         break
 
             else:
@@ -264,4 +269,6 @@ def patch_typeguard():
         typeguard.check_type = check_type
         typeguard.check_argument_types = check_argument_types
         typeguard.check_return_type = check_return_type
-        typeguard.get_type_hints = lambda *args, **kwargs: get_type_hints(*args, **kwargs, include_extras=True)
+        typeguard.get_type_hints = lambda *args, **kwargs: get_type_hints(
+            *args, **kwargs, include_extras=True
+        )

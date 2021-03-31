@@ -26,7 +26,7 @@ class TensorDetail(metaclass=abc.ABCMeta):
 
 
 # inheriting from typing.NamedTuple crashes typeguard
-class _Dim(collections.namedtuple('_Dim', ['name', 'size'])):
+class _Dim(collections.namedtuple("_Dim", ["name", "size"])):
     name: Union[None, str]
     size: Union[ellipsis, int]
 
@@ -144,16 +144,17 @@ class _FloatDetail(TensorDetail):
     @classmethod
     def tensor_repr(cls, tensor: torch.Tensor) -> str:
         return "float_detail" if tensor.is_floating_point() else ""
-        
+
+
 class _NamedTensorDetail(TensorDetail):
     def __repr__(self) -> str:
         return "named_detail"
-        
+
     # named_detail is special-cased and consumed by TensorType.
     # It's a bit of an odd exception.
     def check(self, tensor: torch.Tensor) -> bool:
         raise RuntimeError
-        
+
     @classmethod
     def tensor_repr(cls, tensor: torch.Tensor) -> str:
         raise RuntimeError

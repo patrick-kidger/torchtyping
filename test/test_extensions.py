@@ -7,16 +7,17 @@ good = foo = None
 
 # Write the extension
 
+
 class FooDetail(TensorDetail):
     def __init__(self, *, value, **kwargs):
         super().__init__(**kwargs)
         self.value = value
-        
+
     def check(self, tensor: Tensor) -> bool:
         return hasattr(tensor, "foo") and tensor.foo == self.foo
 
     # reprs used in error messages when the check is failed
-    
+
     def __repr__(self) -> str:
         return f"FooDetail({self.value})"
 
@@ -26,10 +27,12 @@ class FooDetail(TensorDetail):
         # to what this detail is checking
         if hasattr(tensor, "foo"):
             return f"FooDetail({tensor.foo})"
-       	else:
+        else:
             return ""
 
+
 # Test the extension
+
 
 @typechecked
 def foo_checker(tensor: TensorType[float, FooDetail(value="good-foo")]):
@@ -49,7 +52,7 @@ def invalid_foo_one():
 
 
 def invalid_foo_two():
-    x = torch.rand(2).int()
+    x = rand(2).int()
     x.foo = "good-foo"
     foo_checker(x)
 

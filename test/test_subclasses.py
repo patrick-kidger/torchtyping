@@ -175,7 +175,7 @@ def test_named_tensor():
 
 def test_named_float_tensor():
     @typeguard.typechecked
-    def func(x: NamedFloatTensorType["a", "b":3]):
+    def func(x: TensorType["a", "b":3, float_detail, named_detail]):
         pass
 
     x = torch.rand(2, 3, names=("a", "b"))
