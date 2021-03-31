@@ -1,7 +1,7 @@
 import pytest
 
 from torch import rand, sparse_coo, tensor
-from torchtyping import NamedTensorType, TensorType
+from torchtyping import TensorType, named_detail
 from typeguard import typechecked
 
 
@@ -189,7 +189,7 @@ def test_example9():
 
 def test_example10():
     @typechecked
-    def func(x: NamedTensorType["a":3, "b"]):
+    def func(x: TensorType["a":3, "b", named_detail]):
         pass
 
     func(rand(3, 4, names=("a", "b")))

@@ -6,7 +6,7 @@ from .tensor_details import (
     float_detail,
     DtypeDetail,
     LayoutDetail,
-    named_tensor,
+    named_detail,
     ShapeDetail,
     TensorDetail,
 )

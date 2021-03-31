@@ -82,7 +82,7 @@ class FooDetail(TensorDetail):
     # reprs used in error messages when the check is failed
     
     def __repr__(self) -> str:
-        return f"FooDetail({self.value})""
+        return f"FooDetail({self.value})"
 
     @classmethod
     def tensor_repr(cls, tensor: Tensor) -> str:
@@ -96,7 +96,7 @@ class FooDetail(TensorDetail):
 # Test the extension
 
 @typechecked
-def foo_checker(tensor: TensorType[float, FooDetail("good-foo")]):
+def foo_checker(tensor: TensorType[float, FooDetail(value="good-foo")]):
     pass
 
 
@@ -178,7 +178,7 @@ def func(x: TensorType[3, 4, float]):
 **Checking names for dimensions as per [named tensors](https://pytorch.org/docs/stable/named_tensor.html):**
 
 ```python
-def func(x: NamedTensorType["a": 3, "b"]):
+def func(x: TensorType["a": 3, "b", named_detail]):
     # x has has names ("a", "b")
     # x has shape (3, Any)
 ```

@@ -108,7 +108,7 @@ class TensorType(metaclass=_TensorTypeMeta):
                     scalar_shape = True
                 else:
                     cls._type_error(item_i)
-            elif item_i in (int, bool, str) or isinstance(item_i, torch.dtype):
+            elif item_i in (int, bool, float) or isinstance(item_i, torch.dtype):
                 dtypes.append(item_i)
             elif isinstance(item_i, torch.layout):
                 layouts.append(item_i)

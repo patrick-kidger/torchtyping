@@ -1,38 +1,38 @@
 import pytest
-from torch import rand, tensor
-from torchtyping import TensorType
+from torch import rand, Tensor
+from torchtyping import TensorDetail, TensorType
 from typeguard import typechecked
-
-from typing import Any, Optional
 
 good = foo = None
 
+# Write the extension
 
-class FooType:
-    def __init__(self, value):
+class FooDetail(TensorDetail):
+    def __init__(self, *, value, **kwargs):
+        super().__init__(**kwargs)
         self.value = value
+        
+    def check(self, tensor: Tensor) -> bool:
+        return hasattr(tensor, "foo") and tensor.foo == self.foo
 
-
-class FooTensorType(TensorType):
-    foo: Optional[str] = None
-
-    @classmethod
-    def check(cls, instance: Any) -> bool:
-        check = super().check(instance)
-        if cls.foo is not None:
-            check = check and hasattr(instance, "foo") and instance.foo == cls.foo
-        return check
+    # reprs used in error messages when the check is failed
+    
+    def __repr__(self) -> str:
+        return f"FooDetail({self.value})"
 
     @classmethod
-    def getitem(cls, item: Any) -> dict[str, Any]:
-        if isinstance(item, FooType):
-            return {"foo": item.value}
-        else:
-            return super().getitem(item)
+    def tensor_repr(cls, tensor: Tensor) -> str:
+        # Should return a representation of the tensor with respect
+        # to what this detail is checking
+        if hasattr(tensor, "foo"):
+            return f"FooDetail({tensor.foo})"
+       	else:
+            return ""
 
+# Test the extension
 
 @typechecked
-def foo_checker(tensor: FooTensorType[float][FooType("good-foo")]):
+def foo_checker(tensor: TensorType[float, FooDetail(value="good-foo")]):
     pass
 
 
@@ -49,7 +49,7 @@ def invalid_foo_one():
 
 
 def invalid_foo_two():
-    x = tensor([1, 2])  # integer type
+    x = torch.rand(2).int()
     x.foo = "good-foo"
     foo_checker(x)
 
