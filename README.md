@@ -66,11 +66,11 @@ func(rand(3), rand(1))
 # TypeError: Dimension 'batch' of inconsistent size. Got both 1 and 3.
 ```
 
-`typeguard` also has an import hook that can be used to automatically test an entire module, without needing to manually add `@typechecked` decorators.
+`typeguard` also has an import hook that can be used to automatically test an entire module, without needing to manually add `@typeguard.typechecked` decorators.
 
-`patch_typeguard()` should be called before using `@typeguard.typechecked`. (Or before using the `typeguard` import hook.) If you're not using `typeguard` then it can be omitted altogether, and `torchtyping` just used for documentation purposes.
+`torchtyping.patch_typeguard()` should be called before using `@typeguard.typechecked`. (Or before defining `func` if using the `typeguard` import hook.) The function is safe to run multiple times (it does nothing after the first run), so for example a sensible pattern is to call it once at the start of each file using `torchtyping`.
 
-If you're not already using `typeguard` for your regular Python programming, then strongly consider using it. It's a great way to squash bugs. Both `typeguard` and `torchtyping` also integrate with `pytest`, so if you're concerned about any performance penalty then they can be enabled during tests only.
+If you're not using `typeguard` then `torchtyping.patch_typeguard()` can be omitted altogether, and `torchtyping` just used for documentation purposes. If you're not already using `typeguard` for your regular Python programming, then strongly consider using it. It's a great way to squash bugs. Both `typeguard` and `torchtyping` also integrate with `pytest`, so if you're concerned about any performance penalty then they can be enabled during tests only.
 
 ## API
 
@@ -111,14 +111,14 @@ This function is safe to run multiple times. (It does nothing after the first ru
 pytest --torchtyping-patch-typeguard
 ```
 
-`torchtyping` offers a pytest plugin to automatically run `torchtyping.patch_typeguard()` before your tests. Packages can then be passed to `typeguard` as normal. (Either by using `@typeguard.typechecked`, `typeguard`'s import hook, or the `pytest` flag `--typeguard-packages="your_package_here"`.)
+`torchtyping` offers a `pytest` plugin to automatically run `torchtyping.patch_typeguard()` before your tests. `pytest` will automatically discover the plugin, you just need to pass the `--torchtyping-patch-typeguard` flag to enable it. Packages can then be passed to `typeguard` as normal, either by using `@typeguard.typechecked`, `typeguard`'s import hook, or the `pytest` flag `--typeguard-packages="your_package_here"`.
 
 ## Further documentation
 
 See the [further documentation](./FURTHER-DOCUMENTATION.md) for:
 
 - FAQ;
-  - Including how to easily silence spurious flake8 errors.
+  - Including `flake8` and `mypy` compatibility;
 - How to write custom extensions to `torchtyping`;
-- Resources and links to alternative proposals and libraries;
+- Resources and links to other libraries and materials on this topic;
 - More examples.
