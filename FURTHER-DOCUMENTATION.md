@@ -137,8 +137,8 @@ As you can see, a `detail` must supply three methods. The first is a `check` met
 
 **Other libraries**
 - [TensorAnnotations](https://github.com/deepmind/tensor_annotations) is a library for statically checking JAX or TensorFlow tensor shapes. (It also has some good links on to other discussions around this topic.)
-- [`tsanley`](https://github.com/ofnote/tsanley)/[`tsalib`](https://github.com/ofnote/tsalib) is an alternative dynamic shape checker.
-- [`nptyping`](https://github.com/ramonhagenaars/nptyping) does something very similar for numpy.
+- [`nptyping`](https://github.com/ramonhagenaars/nptyping) does something very similar to `torchtyping`, but for numpy.
+- [`tsanley`](https://github.com/ofnote/tsanley)/[`tsalib`](https://github.com/ofnote/tsalib) is an alternative dynamic shape checker, but requires a bit of extra setup.
 - [TensorGuard](https://github.com/Michedev/tensorguard) is an alternative, using extra function calls rather than type hints.
 
 ## More Examples
