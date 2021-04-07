@@ -129,10 +129,15 @@ As you can see, a `detail` must supply three methods. The first is a `check` met
 
 `torchtyping` is one amongst a few libraries trying to do this kind of thing. Here's some links for the curious:
 
+**Discussion**
 - [PEP 646](https://www.python.org/dev/peps/pep-0646/) proposes variadic generics. These are a tool needed for static checkers (like `mypy`) to be able to do the kind of shape checking that `torchtyping` does dynamically. However at time of writing Python doesn't yet support this.
-- [TensorAnnotations](https://github.com/deepmind/tensor_annotations) is a library for statically checking JAX or TensorFlow tensor shapes.
-- [`tsanley`](https://github.com/ofnote/tsanley)/[`tsalib`](https://github.com/ofnote/tsalib) is an alternative dynamic shape checker.
 - The [Ideas for array shape typing in Python](https://docs.google.com/document/d/1vpMse4c6DrWH5rq2tQSx3qwP_m_0lyn-Ij4WHqQqRHY/) document is a good overview of some of the ways to type check arrays.
+
+**Other libraries**
+- [TensorAnnotations](https://github.com/deepmind/tensor_annotations) is a library for statically checking JAX or TensorFlow tensor shapes. (It also has some good links on to other discussions around this topic.)
+- [`tsanley`](https://github.com/ofnote/tsanley)/[`tsalib`](https://github.com/ofnote/tsalib) is an alternative dynamic shape checker.
+- [`nptyping`](https://github.com/ramonhagenaars/nptyping) does something very similar for numpy.
+- [TensorGuard](https://github.com/Michedev/tensorguard) is an alternative, using extra function calls rather than type hints.
 
 ## More Examples
 
