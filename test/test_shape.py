@@ -1,4 +1,5 @@
 import pytest
+from typing import Any
 import torch
 from torchtyping import TensorType
 import typeguard
@@ -214,3 +215,60 @@ def test_int_str_dim():
         _abm1_dim_checker(x)
     with pytest.raises(TypeError):
         _m1bm1_dim_checker(x)
+
+
+def test_any_dim():
+    @typeguard.typechecked
+    def _3any_dim_checker(x: TensorType[3, Any]):
+        pass
+
+    @typeguard.typechecked
+    def _any4_dim_checker(x: TensorType[Any, 4]):
+        pass
+
+    @typeguard.typechecked
+    def _anyany_dim_checker(x: TensorType[Any, Any]):
+        pass
+
+    @typeguard.typechecked
+    def _34any_dim_checker(x: TensorType[3, 4, Any]):
+        pass
+
+    @typeguard.typechecked
+    def _any4any_dim_checker(x: TensorType[Any, 4, Any]):
+        pass
+
+    x = torch.rand(3)
+    with pytest.raises(TypeError):
+        _3any_dim_checker(x)
+    with pytest.raises(TypeError):
+        _any4_dim_checker(x)
+    with pytest.raises(TypeError):
+        _anyany_dim_checker(x)
+    with pytest.raises(TypeError):
+        _34any_dim_checker(x)
+    with pytest.raises(TypeError):
+        _any4any_dim_checker(x)
+
+    x = torch.rand((3, 4))
+    _3any_dim_checker(x)
+    _any4_dim_checker(x)
+    _anyany_dim_checker(x)
+
+    x = torch.rand((4, 5))
+    with pytest.raises(TypeError):
+        _any4_dim_checker(x)
+
+    x = torch.rand(4, 5)
+    with pytest.raises(TypeError):
+        _3any_dim_checker(x)
+
+    x = torch.rand((3, 4, 5))
+    _34any_dim_checker(x)
+    _any4any_dim_checker(x)
+
+    x = torch.rand((3, 5, 5))
+    with pytest.raises(TypeError):
+        x = _any4any_dim_checker(x)
+    with pytest.raises(TypeError):
+        _34any_dim_checker(x)

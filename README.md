@@ -88,6 +88,7 @@ Each of `shape`, `dtype`, `layout`, `details` are optional.
   - A `str: ...` pair, in which case the multiple dimensions corresponding to `...` will be bound to the name specified by `str`, and again checked for consistency between arguments.
   - `None`, which when used in conjunction with `is_named` below, indicates a dimension that must _not_ have a name in the sense of [named tensors](https://pytorch.org/docs/stable/named_tensor.html).
   - A `None: int` pair, combining both `None` and `int` behaviour. (Just a `None` on its own is equivalent to `None: -1`.)
+  - A `typing.Any`: Any size is allowed for this dimension (equivalent to `-1`).
   - Any tuple of the above. For example.`TensorType["batch": ..., "length": 10, "channels", -1]`. If you just want to specify the number of dimensions then use for example `TensorType[-1, -1, -1]` for a three-dimensional tensor.
 - The `dtype` argument can be any of:
   - `torch.float32`, `torch.float64` etc.
