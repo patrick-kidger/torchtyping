@@ -56,6 +56,8 @@ class TensorType(metaclass=_TensorTypeMeta):
             return _Dim(name=item_i.start, size=item_i.stop)
         elif item_i is ...:
             return _Dim(name=_no_name, size=...)
+        elif item_i is Any:
+            return _Dim(name=_no_name, size=-1)
         else:
             cls._type_error(item_i)
 
@@ -86,7 +88,11 @@ class TensorType(metaclass=_TensorTypeMeta):
         layouts = []
         details = []
         for item_i in item:
-            if isinstance(item_i, (int, str, slice)) or item_i in (None, ...):
+            if (
+                isinstance(item_i, (int, str, slice))
+                or item_i in (None, ...)
+                or item_i is Any
+            ):
                 item_i = cls._convert_shape_element(item_i)
                 if item_i.size is ...:
                     # Supporting an arbitrary number of Ellipsis in arbitrary
