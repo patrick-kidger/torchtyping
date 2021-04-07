@@ -88,11 +88,7 @@ class TensorType(metaclass=_TensorTypeMeta):
         layouts = []
         details = []
         for item_i in item:
-            if (
-                isinstance(item_i, (int, str, slice))
-                or item_i in (None, ...)
-                or item_i is Any
-            ):
+            if isinstance(item_i, (int, str, slice)) or item_i in (None, ..., Any):
                 item_i = cls._convert_shape_element(item_i)
                 if item_i.size is ...:
                     # Supporting an arbitrary number of Ellipsis in arbitrary
