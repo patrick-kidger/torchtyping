@@ -29,7 +29,7 @@ If (like me) you find yourself littering your code with comments like `# x has s
 ## Installation
 
 ```bash
-pip install git+https://github.com/patrick-kidger/torchtyping.git
+pip install torchtyping
 ```
 
 Requires Python 3.9+ and PyTorch 1.7.0+.
