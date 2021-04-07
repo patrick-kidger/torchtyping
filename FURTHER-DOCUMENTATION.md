@@ -6,8 +6,8 @@
 
 - **Use type annotations.** There's a few other libraries out there that do this via, essentially, syntactic sugar around `assert` statements. I wanted something neater than that.
 - **It should be easy to stop using `torchtyping`.** No, really! If it's not for you then it's easy to remove afterwards. Using `torchtyping` isn't something you should have to bake into your code; just replace `from torchtyping import TensorType` with `TensorType = list` (as a dummy), and your code should still all run.
-- **The runtime type checking should be optional.** Runtime checks obviously impose a performance penalty. The use of `typeguard` accomplishes this perfectly, in particular through its option to only activate when running tests (my favourite choice).
-- **`torchtyping` should be human-readable.** A big part of using type annotations in Python code is to document -- for whoever's reading it -- what is expected. (Particularly valuable on large codebases with several developers.) `torchtyping`'s syntax (and the use of type annotations over some other mechanism) is deliberately chosen to fulfill this goal.
+- **The runtime type checking should be optional.** Runtime checks obviously impose a performance penalty. Integrating with `typeguard` accomplishes this perfectly, in particular through its option to only activate when running tests (my favourite choice).
+- **`torchtyping` should be human-readable.** A big part of using type annotations in Python code is to document -- for whoever's reading it -- what is expected. (Particularly valuable on large codebases with several developers.) `torchtyping`'s syntax, and the use of type annotations over some other mechanism, is deliberately chosen to fulfill this goal.
 
 ## FAQ
 
