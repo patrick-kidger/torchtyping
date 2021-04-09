@@ -26,6 +26,7 @@ Make your changes. Make sure to include additional tests testing any new functio
 Verify the tests all pass:
 
 ```bash
+pip install pytest
 pytest
 ```
 
