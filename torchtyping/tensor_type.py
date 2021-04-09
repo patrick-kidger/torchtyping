@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 
 import torch
 
@@ -13,8 +14,15 @@ from .tensor_details import (
 )
 from .utils import frozendict
 
-from typing import Annotated, Any, NoReturn
+from typing import Any, NoReturn
 
+# Annotated is available in python version 3.9 (PEP 593)
+if sys.version_info >= (3, 9):
+    from typing import Annotated
+else:
+    # Else python version is lower than 3.9
+    # we import Annotated from typing_annotations
+    from typing_extensions import Annotated
 
 # Not Type[Annotated...] as we want to use this in instance checks.
 _AnnotatedType = type(Annotated[torch.Tensor, ...])

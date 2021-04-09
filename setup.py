@@ -1,6 +1,7 @@
 import os
 import re
 import setuptools
+import sys
 
 here = os.path.realpath(os.path.dirname(__file__))
 
@@ -38,6 +39,9 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
@@ -45,9 +49,14 @@ classifiers = [
     "Framework :: Pytest",
 ]
 
-python_requires = "~=3.9"
+user_python_version = sys.version_info
+
+python_requires = ">=3.7.0"
 
 install_requires = ["torch>=1.7.0", "typeguard>=2.11.1"]
+
+if user_python_version < (3, 9):
+    install_requires += ["typing_extensions==3.7.4.3"]
 
 entry_points = dict(pytest11=["torchtyping = torchtyping.pytest_plugin"])
 

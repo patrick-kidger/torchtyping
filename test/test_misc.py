@@ -2,6 +2,7 @@ import pytest
 import torch
 from torchtyping import TensorType
 from typeguard import typechecked
+from typing import Tuple
 
 
 dim1 = dim2 = dim3 = channel = None
@@ -111,7 +112,7 @@ def test_non_tensor():
 
 def test_nested_types():
     @typechecked
-    def func(x: tuple[TensorType[3, "channel", 4], TensorType["channel"]]):
+    def func(x: Tuple[TensorType[3, "channel", 4], TensorType["channel"]]):
         pass
 
     func((torch.rand(3, 1, 4), torch.rand(1)))

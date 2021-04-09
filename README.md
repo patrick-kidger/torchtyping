@@ -32,7 +32,7 @@ If (like me) you find yourself littering your code with comments like `# x has s
 pip install torchtyping
 ```
 
-Requires Python 3.9+ and PyTorch 1.7.0+.
+Requires Python 3.7+ and PyTorch 1.7.0+.
 
 ## Usage
 

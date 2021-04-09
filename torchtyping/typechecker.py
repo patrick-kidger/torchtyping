@@ -1,12 +1,19 @@
 import inspect
+import sys
 import torch
 import typeguard
 
 from .tensor_details import _Dim, _no_name, ShapeDetail
 from .tensor_type import _AnnotatedType
 
-from typing import Any, get_args, Type
-from typing import get_type_hints
+from typing import Any, Dict, List, Tuple
+
+# get_args is available in python version 3.8
+# get_type_hints with include_extras parameter is available in 3.9 PEP 593.
+if sys.version_info >= (3, 9):
+    from typing import get_type_hints, get_args, Type
+else:
+    from typing_extensions import get_type_hints, get_args, Type
 
 
 # TYPEGUARD PATCHER
@@ -40,7 +47,7 @@ from typing import get_type_hints
 # recorded value-type pairs and checks for any inconsistencies.
 
 
-def _to_string(name, detail_reprs: list[str]) -> str:
+def _to_string(name, detail_reprs: List[str]) -> str:
     assert len(detail_reprs) > 0
     string = name + "["
     pieces = []
@@ -53,7 +60,7 @@ def _to_string(name, detail_reprs: list[str]) -> str:
 
 
 def _check_tensor(
-    argname: str, value: Any, origin: Type[torch.Tensor], metadata: dict[str, Any]
+    argname: str, value: Any, origin: Type[torch.Tensor], metadata: Dict[str, Any]
 ):
     details = metadata["details"]
     if not isinstance(value, origin) or any(
@@ -259,9 +266,9 @@ def patch_typeguard():
                 "name_to_size",
                 "name_to_shape",
             )
-            value_info: list[tuple[str, torch.Tensor, str, dict[str, Any]]]
-            name_to_size: dict[str, int]
-            name_to_shape: dict[str, tuple[int]]
+            value_info: List[Tuple[str, torch.Tensor, str, Dict[str, Any]]]
+            name_to_size: Dict[str, int]
+            name_to_shape: Dict[str, Tuple[int]]
 
         _check_type = typeguard.check_type
         _check_argument_types = typeguard.check_argument_types
