@@ -124,4 +124,4 @@ See the [further documentation](https://github.com/patrick-kidger/torchtyping/FU
   - Including `flake8` and `mypy` compatibility;
 - How to write custom extensions to `torchtyping`;
 - Resources and links to other libraries and materials on this topic;
-- More examples.
+- More examples. 
