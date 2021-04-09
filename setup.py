@@ -60,6 +60,7 @@ setuptools.setup(
     maintainer_email=author_email,
     description=description,
     long_description=readme,
+    long_description_content_type="text/markdown",
     url=url,
     license=license,
     classifiers=classifiers,

@@ -1,12 +1,23 @@
 # Further documentation
 
+## Design goals
+
+`torchtyping` had a few design goals.
+
+- **Use type annotations.** There's a few other libraries out there that do this via, essentially, syntactic sugar around `assert` statements. I wanted something neater than that.
+- **It should be easy to stop using `torchtyping`.** No, really! If it's not for you then it's easy to remove afterwards. Using `torchtyping` isn't something you should have to bake into your code; just replace `from torchtyping import TensorType` with `TensorType = list` (as a dummy), and your code should still all run.
+- **The runtime type checking should be optional.** Runtime checks obviously impose a performance penalty. Integrating with `typeguard` accomplishes this perfectly, in particular through its option to only activate when running tests (my favourite choice).
+- **`torchtyping` should be human-readable.** A big part of using type annotations in Python code is to document -- for whoever's reading it -- what is expected. (Particularly valuable on large codebases with several developers.) `torchtyping`'s syntax, and the use of type annotations over some other mechanism, is deliberately chosen to fulfill this goal.
+
 ## FAQ
 
 **The runtime checking isn't working!**
 
 First make sure that you're calling `torchtyping.patch_typeguard`.
 
-Then sure that you've enabled `typeguard`, either by decorating the function with `typeguard.typechecked`, or by using `typeguard.importhook.install_import_hook`, or by using the pytest command line flags listed in the main [README](./README.md). Make sure these happen after calling `torchtyping.patch_typeguard`.
+Then make sure that you've enabled `typeguard`, either by decorating the function with `typeguard.typechecked`, or by using `typeguard.importhook.install_import_hook`, or by using the pytest command line flags listed in the main [README](./README.md).
+
+Make sure that function you're checking is defined _after_ calling `torchtyping.patch_typeguard`.
 
 If you have done all of that, then feel free to raise an issue.
 
@@ -120,10 +131,15 @@ As you can see, a `detail` must supply three methods. The first is a `check` met
 
 `torchtyping` is one amongst a few libraries trying to do this kind of thing. Here's some links for the curious:
 
+**Discussion**
 - [PEP 646](https://www.python.org/dev/peps/pep-0646/) proposes variadic generics. These are a tool needed for static checkers (like `mypy`) to be able to do the kind of shape checking that `torchtyping` does dynamically. However at time of writing Python doesn't yet support this.
-- [TensorAnnotations](https://github.com/deepmind/tensor_annotations) is a library for statically checking JAX or TensorFlow tensor shapes.
-- [`tsanley`](https://github.com/ofnote/tsanley)/[`tsalib`](https://github.com/ofnote/tsalib) is an alternative dynamic shape checker.
 - The [Ideas for array shape typing in Python](https://docs.google.com/document/d/1vpMse4c6DrWH5rq2tQSx3qwP_m_0lyn-Ij4WHqQqRHY/) document is a good overview of some of the ways to type check arrays.
+
+**Other libraries**
+- [TensorAnnotations](https://github.com/deepmind/tensor_annotations) is a library for statically checking JAX or TensorFlow tensor shapes. (It also has some good links on to other discussions around this topic.)
+- [`nptyping`](https://github.com/ramonhagenaars/nptyping) does something very similar to `torchtyping`, but for numpy.
+- [`tsanley`](https://github.com/ofnote/tsanley)/[`tsalib`](https://github.com/ofnote/tsalib) is an alternative dynamic shape checker, but requires a bit of extra setup.
+- [TensorGuard](https://github.com/Michedev/tensorguard) is an alternative, using extra function calls rather than type hints.
 
 ## More Examples
 
