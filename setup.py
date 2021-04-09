@@ -45,7 +45,7 @@ classifiers = [
     "Framework :: Pytest",
 ]
 
-python_requires = "~=3.9"
+python_requires = ">=3.7.0"
 
 install_requires = ["torch>=1.7.0", "typeguard>=2.11.1"]
 
