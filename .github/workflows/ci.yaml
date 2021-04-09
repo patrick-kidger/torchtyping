@@ -23,7 +23,7 @@ jobs:
           python -m black --check torchtyping/
       - name: Lint with flake8
         run: |
-          flake8 .
+          flake8 torchtyping/
 
   test_suite:
     runs-on: ubuntu-latest
