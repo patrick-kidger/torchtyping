@@ -132,23 +132,7 @@ def _check_memo(memo):
                             )
 
                     if dim.name not in (None, _no_name):
-                        if dim.size == -1:
-                            try:
-                                lookup_size = memo.name_to_size[dim.name]
-                            except KeyError:
-                                memo.name_to_size[dim.name] = size
-                            else:
-                                # Technically not necessary, as one of the
-                                # sizes will override the other, and then the
-                                # instance check will fail.
-                                # This gives a nicer error message though.
-                                if lookup_size != size:
-                                    raise TypeError(
-                                        f"Dimension '{dim.name}' of inconsistent"
-                                        f" size. Got both {size} and "
-                                        f"{lookup_size}."
-                                    )
-                        elif dim.size is ...:
+                        if dim.size is ...:
                             try:
                                 lookup_shape = memo.name_to_shape[dim.name]
                             except KeyError:
@@ -192,11 +176,22 @@ def _check_memo(memo):
                                         f"inconsistent shape. Got both {shape_piece} "
                                         f"and {lookup_shape}."
                                     )
-
-                        # else (dim.size an integer) branch not included. We don't
-                        # check individual dim.size == size here, that's done in
-                        # the tensor check. Here we're just concerned with
-                        # resolving the size of names.
+                        else:
+                            try:
+                                lookup_size = memo.name_to_size[dim.name]
+                            except KeyError:
+                                memo.name_to_size[dim.name] = size
+                            else:
+                                # Technically not necessary, as one of the
+                                # sizes will override the other, and then the
+                                # instance check will fail.
+                                # This gives a nicer error message though.
+                                if lookup_size != size:
+                                    raise TypeError(
+                                        f"Dimension '{dim.name}' of inconsistent"
+                                        f" size. Got both {size} and "
+                                        f"{lookup_size}."
+                                    )
 
                 del shape_info[argname, shape, detail]
                 break

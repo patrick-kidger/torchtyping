@@ -214,3 +214,77 @@ def test_int_str_dim():
         _abm1_dim_checker(x)
     with pytest.raises(TypeError):
         _m1bm1_dim_checker(x)
+
+
+def test_return():
+    @typeguard.typechecked
+    def f1(x: TensorType["b":4]) -> TensorType["b":4]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f2(x: TensorType["b"]) -> TensorType["b":4]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f3(x: TensorType[4]) -> TensorType["b":4]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f4(x: TensorType["b":4]) -> TensorType["b"]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f5(x: TensorType["b"]) -> TensorType["b"]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f6(x: TensorType[4]) -> TensorType["b"]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f7(x: TensorType["b":4]) -> TensorType[4]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f8(x: TensorType["b"]) -> TensorType[4]:
+        return torch.rand(3)
+
+    @typeguard.typechecked
+    def f9(x: TensorType[4]) -> TensorType[4]:
+        return torch.rand(3)
+
+    with pytest.raises(TypeError):
+        f1(torch.rand(3))
+    with pytest.raises(TypeError):
+        f2(torch.rand(3))
+    with pytest.raises(TypeError):
+        f3(torch.rand(3))
+    with pytest.raises(TypeError):
+        f4(torch.rand(3))
+    f5(torch.rand(3))
+    with pytest.raises(TypeError):
+        f6(torch.rand(3))
+    with pytest.raises(TypeError):
+        f7(torch.rand(3))
+    with pytest.raises(TypeError):
+        f8(torch.rand(3))
+    with pytest.raises(TypeError):
+        f9(torch.rand(3))
+
+    with pytest.raises(TypeError):
+        f1(torch.rand(4))
+    with pytest.raises(TypeError):
+        f2(torch.rand(4))
+    with pytest.raises(TypeError):
+        f3(torch.rand(4))
+    with pytest.raises(TypeError):
+        f4(torch.rand(4))
+    with pytest.raises(TypeError):
+        f5(torch.rand(4))
+    f6(torch.rand(4))
+    with pytest.raises(TypeError):
+        f7(torch.rand(4))
+    with pytest.raises(TypeError):
+        f8(torch.rand(4))
+    with pytest.raises(TypeError):
+        f9(torch.rand(4))
