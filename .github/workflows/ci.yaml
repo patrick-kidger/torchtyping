@@ -35,6 +35,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install wheel
         pip install -e .
+        pip install pytest
     - name: Test with pytest
       run: |
         python -m pytest test/
