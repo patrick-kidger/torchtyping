@@ -1,6 +1,7 @@
 import os
 import re
 import setuptools
+import sys
 
 here = os.path.realpath(os.path.dirname(__file__))
 
@@ -45,9 +46,14 @@ classifiers = [
     "Framework :: Pytest",
 ]
 
+user_python_version = sys.version_info
+
 python_requires = ">=3.7.0"
 
 install_requires = ["torch>=1.7.0", "typeguard>=2.11.1"]
+
+if user_python_version < (3, 9):
+    install_requires += ["typing_extensions==3.7.4.3"]
 
 entry_points = dict(pytest11=["torchtyping = torchtyping.pytest_plugin"])
 
