@@ -7,7 +7,7 @@ def batch_outer_product(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     # x has shape (batch, x_channels)
     # y has shape (batch, y_channels)
     # return has shape (batch, x_channels, y_channels)
-
+ 
     return x.unsqueeze(-1) * y.unsqueeze(-2)
 ```
 into this:
