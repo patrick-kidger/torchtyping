@@ -21,7 +21,7 @@ pre-commit install
 
 These automatically check that the code is formatted, using Black and flake8.
 
-Make your changes. Make sure to include additional tests testing the functionality.
+Make your changes. Make sure to include additional tests testing any new functionality.
 
 Verify the tests all pass:
 
