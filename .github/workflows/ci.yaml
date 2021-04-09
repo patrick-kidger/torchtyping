@@ -17,7 +17,7 @@ jobs:
       - name: Install black
         run: |
           python -m pip install --upgrade pip
-          pip install black isort
+          pip install black flake8
       - name: Format with black
         run: |
           python -m black --check torchtyping/
