@@ -184,21 +184,27 @@ def _check_memo(memo):
                                         f"and {lookup_shape}."
                                     )
                         else:
-                            try:
-                                lookup_size = memo.name_to_size[dim.name]
-                            except KeyError:
-                                memo.name_to_size[dim.name] = size
-                            else:
-                                # Technically not necessary, as one of the
-                                # sizes will override the other, and then the
-                                # instance check will fail.
-                                # This gives a nicer error message though.
-                                if lookup_size != size:
-                                    raise TypeError(
-                                        f"Dimension '{dim.name}' of inconsistent"
-                                        f" size. Got both {size} and "
-                                        f"{lookup_size}."
-                                    )
+                            names_to_check = (
+                                [dim.name, dim.size]
+                                if isinstance(dim.size, str)
+                                else [dim.name]
+                            )
+                            for name in names_to_check:
+                                try:
+                                    lookup_size = memo.name_to_size[name]
+                                except KeyError:
+                                    memo.name_to_size[name] = size
+                                else:
+                                    # Technically not necessary, as one of the
+                                    # sizes will override the other, and then the
+                                    # instance check will fail.
+                                    # This gives a nicer error message though.
+                                    if lookup_size != size:
+                                        raise TypeError(
+                                            f"Dimension '{dim.name}' of inconsistent"
+                                            f" size. Got both {size} and "
+                                            f"{lookup_size}."
+                                        )
 
                 del shape_info[argname, shape, detail]
                 break
@@ -235,6 +241,8 @@ def _check_memo(memo):
             if dim.name not in (None, _no_name):
                 if size == -1:
                     size = memo.name_to_size[dim.name]
+                elif isinstance(size, str):
+                    size = memo.name_to_size[size]
                 elif size is ...:
                     # This assumes that named Ellipses only occur to the
                     # right of unnamed Ellipses, to avoid filling in

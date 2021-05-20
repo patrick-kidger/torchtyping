@@ -85,6 +85,7 @@ Each of `shape`, `dtype`, `layout`, `details` are optional.
   - A `str`: the size of the dimension passed at runtime will be bound to this name, and all tensors checked that the sizes are consistent.
   - A `...`: An arbitrary number of dimensions of any sizes.
   - A `str: int` pair (technically it's a slice), combining both `str` and `int` behaviour. (Just a `str` on its own is equivalent to `str: -1`.)
+  - A `str: str` pair, in which case the size of the dimension passed at runtime will be bound to both names, and all dimensions with either name must have the same size.
   - A `str: ...` pair, in which case the multiple dimensions corresponding to `...` will be bound to the name specified by `str`, and again checked for consistency between arguments.
   - `None`, which when used in conjunction with `is_named` below, indicates a dimension that must _not_ have a name in the sense of [named tensors](https://pytorch.org/docs/stable/named_tensor.html).
   - A `None: int` pair, combining both `None` and `int` behaviour. (Just a `None` on its own is equivalent to `None: -1`.)
