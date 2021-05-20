@@ -6,7 +6,7 @@ import typeguard
 
 
 # make flake8 happy
-a = b = c = x = y = z = _y0_9z = None
+a = b = c = x = y = z = None
 
 
 def test_fixed_int_dim():
@@ -273,36 +273,6 @@ def test_other_str_should_fail():
 
         def func(x: TensorType[3:"x"]):
             pass
-
-
-def test_str_nonidentifier_should_fail():
-    @typeguard.typechecked
-    def func1(x: TensorType["x":"_y0_9z", "_y0_9z"]):
-        pass
-
-    func1(torch.ones(3, 3))
-
-    with pytest.raises(TypeError):
-
-        def func2(x: TensorType["x":"(y)"]):
-            pass
-
-    with pytest.raises(TypeError):
-
-        def func3(x: TensorType["x":"y+2"]):
-            pass
-
-
-def test_none_int():
-    @typeguard.typechecked
-    def func(x: TensorType[None:3, "b":2, is_named]):
-        pass
-
-    func(torch.ones(3, 2, names=[None, "b"]))
-    with pytest.raises(TypeError):
-        func(torch.ones(3, 2))
-    with pytest.raises(TypeError):
-        func(torch.ones(3, 2), names=["a", "b"])
 
 
 def test_dataype():
