@@ -1,3 +1,7 @@
+**0.1.2**
+
+Added support for `str: str` pairs and `None: str` pairs.
+
 **0.1.1**
 
 Added support for Python 3.7+. (Down from Python 3.9+.)  
