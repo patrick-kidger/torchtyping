@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 import sys
 
 import torch
@@ -26,6 +27,10 @@ else:
 
 # Not Type[Annotated...] as we want to use this in instance checks.
 _AnnotatedType = type(Annotated[torch.Tensor, ...])
+
+
+# make flake8 happy
+__torchtyping__ = cls_name = None
 
 
 # For use when we have a plain TensorType, without any [].
@@ -58,6 +63,10 @@ class TensorType(metaclass=_TensorTypeMeta):
             if item_i.start is not None and not isinstance(item_i.start, str):
                 cls._type_error(item_i)
             if item_i.stop is not ... and not isinstance(item_i.stop, (int, str)):
+                cls._type_error(item_i)
+            if isinstance(
+                item_i.stop, str
+            ) and not TensorType.valid_size_str_re.fullmatch(item_i.stop):
                 cls._type_error(item_i)
             if item_i.start is None and item_i.stop is ...:
                 cls._type_error(item_i)
@@ -171,3 +180,6 @@ class TensorType(metaclass=_TensorTypeMeta):
                 {"__torchtyping__": True, "details": details, "cls_name": cls.__name__}
             ),
         ]
+
+
+TensorType.valid_size_str_re = re.compile("[_a-zA-Z][_a-zA-Z0-9]*")
