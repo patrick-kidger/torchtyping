@@ -1,12 +1,13 @@
 import pytest
 
-from torch import rand, sparse_coo, tensor
+from torch import ones, rand, sparse_coo, tensor
 from torchtyping import TensorType, is_named
 from typeguard import typechecked
 
 
 # make flake8 happy
 batch = x_channels = y_channels = a = b = channels = channels_x = channels_y = None
+annotator = word = feature = predicate = argument = None
 
 
 def test_example0():
@@ -223,3 +224,37 @@ def test_example11():
         func(rand(3, 4))
     with pytest.raises(TypeError):
         func(rand(3, 4).long())
+
+
+def test_example12():
+    @typechecked
+    def func(
+        feats: TensorType["batch":..., "annotator":3, "word", "feature"],
+        predicates: TensorType[
+            "batch":..., "annotator":3, "predicate":"word", "feature"
+        ],
+        pred_arg_pairs: TensorType[
+            "batch":..., "annotator":3, "predicate":"word", "argument":"word"
+        ],
+    ):
+        pass
+
+    func(ones(2, 1, 3, 4, 5), ones(2, 1, 3, 4, 5), ones(2, 1, 3, 4, 4))
+
+    # matches ...
+    with pytest.raises(TypeError):
+        func(ones(2, 1, 3, 4, 5), ones(2, 3, 4, 5), ones(2, 1, 3, 4, 4))
+    with pytest.raises(TypeError):
+        func(ones(2, 1, 3, 4, 5), ones(2, 2, 3, 4, 5), ones(2, 1, 3, 4, 4))
+
+    # annotator has 3
+    with pytest.raises(TypeError):
+        func(ones(2, 1, 2, 4, 5), ones(2, 1, 2, 4, 5), ones(2, 1, 2, 4, 4))
+
+    # predicate and argument match word
+    with pytest.raises(TypeError):
+        func(ones(2, 1, 3, 3, 5), ones(2, 1, 3, 4, 5), ones(2, 1, 3, 4, 4))
+    with pytest.raises(TypeError):
+        func(ones(2, 1, 3, 4, 5), ones(2, 1, 3, 3, 5), ones(2, 1, 3, 4, 4))
+    with pytest.raises(TypeError):
+        func(ones(2, 1, 3, 4, 5), ones(2, 1, 3, 4, 5), ones(2, 1, 3, 3, 4))

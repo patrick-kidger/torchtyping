@@ -1,11 +1,12 @@
 import pytest
 from typing import Any
 import torch
-from torchtyping import TensorType
+from torchtyping import TensorType, is_named
 import typeguard
 
 
-a = b = c = None
+# make flake8 happy
+a = b = c = x = y = z = None
 
 
 def test_fixed_int_dim():
@@ -145,6 +146,133 @@ def test_str_dim():
         _abm1_dim_checker(x)
     with pytest.raises(TypeError):
         _m1bm1_dim_checker(x)
+
+
+def test_str_str_dim1():
+    @typeguard.typechecked
+    def func(x: TensorType["a":"x"]):
+        pass
+
+    func(torch.ones(3))
+    func(torch.ones(2))
+    with pytest.raises(TypeError):
+        func(torch.tensor(3.0))
+    with pytest.raises(TypeError):
+        func(torch.ones(3, 3))
+
+
+def test_str_str_dim2():
+    @typeguard.typechecked
+    def func(x: TensorType["a":"x", "b":"x"]):
+        pass
+
+    func(torch.ones(3, 3))
+    func(torch.ones(2, 2))
+    with pytest.raises(TypeError):
+        func(torch.tensor(3.0))
+    with pytest.raises(TypeError):
+        func(torch.ones(3))
+    with pytest.raises(TypeError):
+        func(torch.ones(3, 2))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 3))
+
+
+def test_str_str_dim_complex():
+    @typeguard.typechecked
+    def func(x: TensorType["a":"x", "b":"x", "x", "a", "b"]) -> TensorType["c":"x"]:
+        return torch.ones(x.shape[0])
+
+    func(torch.ones(3, 3, 3, 3, 3))
+    func(torch.ones(2, 2, 2, 2, 2))
+    with pytest.raises(TypeError):
+        func(torch.ones(1, 2, 2, 2, 2))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 1, 2, 2, 2))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, 1, 2, 2))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, 2, 1, 2))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, 2, 2, 1))
+
+    @typeguard.typechecked
+    def func2(x: TensorType["a":"x", "b":"x", "x", "a", "b"]) -> TensorType["c":"x"]:
+        return torch.ones(x.shape[0] + 1)
+
+    with pytest.raises(TypeError):
+        func2(torch.ones(2, 2, 2, 2, 2))
+
+    @typeguard.typechecked
+    def func3(x: TensorType["a":"x", "b":"x", "x", "a", "b"]) -> TensorType["c":"x"]:
+        return torch.ones(x.shape[0], x.shape[0])
+
+    with pytest.raises(TypeError):
+        func3(torch.ones(2, 2, 2, 2, 2))
+
+
+def test_str_str_dim_fixed_num():
+    @typeguard.typechecked
+    def func(x: TensorType["a":"x"]) -> TensorType["x":3]:
+        return torch.ones(x.shape[0])
+
+    func(torch.ones(3))
+    with pytest.raises(TypeError):
+        func(torch.ones(2))
+
+
+def test_str_str_dim_fixed_names():
+    @typeguard.typechecked
+    def func(x: TensorType["a":"x", is_named]) -> TensorType["x":3]:
+        return torch.ones(x.shape[0])
+
+    func(torch.ones(3, names=["a"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(3))
+    with pytest.raises(TypeError):
+        func(torch.ones(3, names=["b"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, names=["a"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(3, names=["x"]))
+
+
+def test_str_str_dim_no_early_return():
+    @typeguard.typechecked
+    def func(x: TensorType["a":"x", "b":"y", "c":"z", is_named]):
+        pass
+
+    func(torch.ones(2, 2, 2, names=["a", "b", "c"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, 2, names=["d", "b", "c"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, 2, names=["a", "b", "d"]))
+
+
+def test_none_str():
+    @typeguard.typechecked
+    def func(x: TensorType[None:"x", "b":"x", is_named]):
+        pass
+
+    func(torch.ones(2, 2, names=[None, "b"]))
+    func(torch.ones(3, 3, names=[None, "b"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=["a", "b"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=["x", "b"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=[None, None]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=[None, "c"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=[None, "x"]))
+
+
+def test_other_str_should_fail():
+    with pytest.raises(TypeError):
+
+        def func(x: TensorType[3:"x"]):
+            pass
 
 
 def test_int_str_dim():

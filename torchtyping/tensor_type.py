@@ -57,7 +57,7 @@ class TensorType(metaclass=_TensorTypeMeta):
                 cls._type_error(item_i)
             if item_i.start is not None and not isinstance(item_i.start, str):
                 cls._type_error(item_i)
-            if item_i.stop is not ... and not isinstance(item_i.stop, int):
+            if item_i.stop is not ... and not isinstance(item_i.stop, (int, str)):
                 cls._type_error(item_i)
             if item_i.start is None and item_i.stop is ...:
                 cls._type_error(item_i)
