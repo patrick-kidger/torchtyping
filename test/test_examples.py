@@ -253,8 +253,8 @@ def test_example12():
 
     # predicate and argument match word
     with pytest.raises(TypeError):
-        func(ones(2, 1, 3, 3, 5), ones(2, 2, 3, 4, 5), ones(2, 1, 3, 4, 4))
+        func(ones(2, 1, 3, 3, 5), ones(2, 1, 3, 4, 5), ones(2, 1, 3, 4, 4))
     with pytest.raises(TypeError):
-        func(ones(2, 1, 3, 4, 5), ones(2, 2, 3, 3, 5), ones(2, 1, 3, 4, 4))
+        func(ones(2, 1, 3, 4, 5), ones(2, 1, 3, 3, 5), ones(2, 1, 3, 4, 4))
     with pytest.raises(TypeError):
-        func(ones(2, 1, 3, 4, 5), ones(2, 2, 3, 4, 5), ones(2, 1, 3, 3, 4))
+        func(ones(2, 1, 3, 4, 5), ones(2, 1, 3, 4, 5), ones(2, 1, 3, 3, 4))

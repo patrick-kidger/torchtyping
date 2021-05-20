@@ -97,9 +97,7 @@ class ShapeDetail(TensorDetail):
                 and self_name != tensor_name
             ):
                 return False
-            if isinstance(self_size, str):
-                return True
-            if self_size not in (-1, tensor_size):
+            if not isinstance(self_size, str) and self_size not in (-1, tensor_size):
                 return False
 
         return True

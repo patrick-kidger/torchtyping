@@ -1,12 +1,12 @@
 import pytest
-from typing import Any
+from typing import Any, NamedTuple
 import torch
 from torchtyping import TensorType, is_named
 import typeguard
 
 
 # make flake8 happy
-a = b = c = x = None
+a = b = c = x = y = z = None
 
 
 def test_fixed_int_dim():
@@ -233,6 +233,57 @@ def test_str_str_dim_fixed_names():
         func(torch.ones(3, names=["b"]))
     with pytest.raises(TypeError):
         func(torch.ones(2, names=["a"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(3, names=["x"]))
+
+
+def test_str_str_dim_no_early_return():
+    @typeguard.typechecked
+    def func(x: TensorType["a":"x", "b":"y", "c":"z", is_named]):
+        pass
+
+    func(torch.ones(2, 2, 2, names=["a", "b", "c"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, 2, names=["d", "b", "c"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, 2, names=["a", "b", "d"]))
+
+
+def test_none_str():
+    @typeguard.typechecked
+    def func(x: TensorType[None:"x", "b":"x", is_named]):
+        pass
+
+    func(torch.ones(2, 2, names=[None, "b"]))
+    func(torch.ones(3, 3, names=[None, "b"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=["a", "b"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=["x", "b"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=[None, None]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=[None, "c"]))
+    with pytest.raises(TypeError):
+        func(torch.ones(2, 2, names=[None, "x"]))
+
+
+def test_other_str_should_fail():
+    with pytest.raises(TypeError):
+
+        def func(x: TensorType[3:"x"]):
+            pass
+
+
+def test_dataype():
+    @typeguard.typechecked
+    class MyType(NamedTuple):
+        x: TensorType["a":"x", is_named]
+        y: TensorType["x":3]
+
+    MyType(torch.ones(3, names=["a"]), torch.ones(3, names=["a"]))
+    with pytest.raises(TypeError):
+        MyType(torch.ones(3), torch.ones(3))
 
 
 def test_int_str_dim():
