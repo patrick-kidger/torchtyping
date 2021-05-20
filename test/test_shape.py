@@ -1,5 +1,5 @@
 import pytest
-from typing import Any, NamedTuple
+from typing import Any
 import torch
 from torchtyping import TensorType, is_named
 import typeguard
@@ -273,17 +273,6 @@ def test_other_str_should_fail():
 
         def func(x: TensorType[3:"x"]):
             pass
-
-
-def test_dataype():
-    @typeguard.typechecked
-    class MyType(NamedTuple):
-        x: TensorType["a":"x", is_named]
-        y: TensorType["x":3]
-
-    MyType(torch.ones(3, names=["a"]), torch.ones(3, names=["a"]))
-    with pytest.raises(TypeError):
-        MyType(torch.ones(3), torch.ones(3))
 
 
 def test_int_str_dim():
