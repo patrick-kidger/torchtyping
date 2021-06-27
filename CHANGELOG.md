@@ -1,3 +1,7 @@
+**0.1.4**
+
+Fixed metaclass incompatibility to work with PyTorch 1.9.0.
+
 **0.1.3**
 
 `TensorType` now inherits from `torch.Tensor` so that IDE lookup+error messages work as expected.  
