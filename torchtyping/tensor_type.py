@@ -29,7 +29,7 @@ _AnnotatedType = type(Annotated[torch.Tensor, ...])
 
 
 # For use when we have a plain TensorType, without any [].
-class _TensorTypeMeta(type):
+class _TensorTypeMeta(type(torch.Tensor)):
     def __instancecheck__(cls, obj: Any) -> bool:
         return isinstance(obj, cls.base_cls)
 
