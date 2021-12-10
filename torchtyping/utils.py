@@ -15,3 +15,9 @@ class frozendict(dict):
 
     def __hash__(self):
         return self._hash
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        return self
