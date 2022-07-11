@@ -24,6 +24,8 @@ Bye-bye bugs! Say hello to enforced, clear documentation of your code.
 
 If (like me) you find yourself littering your code with comments like `# x has shape (batch, hidden_state)` or statements like `assert x.shape == y.shape` , just to keep track of what shape everything is, **then this is for you.**
 
+*If you use JAX instead of PyTorch, then see [jaxtyping](https://github.com/google/jaxtyping).*
+
 ---
 
 ## Installation
