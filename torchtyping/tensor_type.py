@@ -11,6 +11,7 @@ from .tensor_details import (
     LayoutDetail,
     ShapeDetail,
     TensorDetail,
+    TensorLike,
 )
 from .utils import frozendict
 
@@ -25,7 +26,7 @@ else:
     from typing_extensions import Annotated
 
 # Not Type[Annotated...] as we want to use this in instance checks.
-_AnnotatedType = type(Annotated[torch.Tensor, ...])
+_AnnotatedType = type(Annotated[TensorLike, ...])
 
 
 # For use when we have a plain TensorType, without any [].
