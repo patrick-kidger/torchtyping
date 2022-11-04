@@ -36,13 +36,19 @@ class MyTensorType(MyTensor, TensorTypeMixin):
     base_cls = MyTensor
 
 
+# make flake8 happy
+x = y = None
+
+
 def test_my_tensor1():
     @typechecked
     def func(x: MyTensorType["x", "y"], y: TensorType["x", "y"]) -> MyTensorType["x"]:
         return x + y
 
     @typechecked
-    def bad_func_spec(x: MyTensorType["x", "y"], y: TensorType["x", "y"]) -> MyTensorType["x", "y"]:
+    def bad_func_spec(
+        x: MyTensorType["x", "y"], y: TensorType["x", "y"]
+    ) -> MyTensorType["x", "y"]:
         return x + y
 
     my_t: MyTensor = MyTensor()

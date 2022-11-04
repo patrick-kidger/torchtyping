@@ -1,6 +1,5 @@
 import inspect
 import sys
-import torch
 import typeguard
 
 from .tensor_details import _Dim, _no_name, ShapeDetail, TensorLike
@@ -11,9 +10,9 @@ from typing import Any, Dict, List, Tuple
 # get_args is available in python version 3.8
 # get_type_hints with include_extras parameter is available in 3.9 PEP 593.
 if sys.version_info >= (3, 9):
-    from typing import get_type_hints, get_args, Type
+    from typing import get_type_hints, get_args
 else:
-    from typing_extensions import get_type_hints, get_args, Type
+    from typing_extensions import get_type_hints, get_args
 
 
 # TYPEGUARD PATCHER

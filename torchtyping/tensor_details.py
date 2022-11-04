@@ -17,6 +17,7 @@ class TensorLike(Protocol):
     # We assume the class has a default constructor
     def __init__(self):
         pass
+
     @property
     def dtype(self) -> torch.dtype:
         pass
@@ -48,8 +49,6 @@ class MyTensor:
 
     def is_floating_point(self):
         return self.dtype == torch.float32
-
-
 
 
 class TensorDetail(metaclass=abc.ABCMeta):
