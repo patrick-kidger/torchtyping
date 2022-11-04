@@ -14,10 +14,6 @@ ellipsis = type(...)
 # These are objects which support the interface given below
 @runtime_checkable
 class TensorLike(Protocol):
-    # We assume the class has a default constructor
-    def __init__(self):
-        pass
-
     @property
     def dtype(self) -> torch.dtype:
         pass

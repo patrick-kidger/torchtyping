@@ -297,11 +297,9 @@ def patch_typeguard():
                 and hasattr(memo, "value_info")
                 and isinstance(expected_type, _AnnotatedType)
             )
-            # Now check if it's annotating a tensor
+            # Grab the base class
             if is_torchtyping_annotation:
                 base_cls, *all_metadata = get_args(expected_type)
-                if not isinstance(base_cls(), TensorLike):
-                    is_torchtyping_annotation = False
             # Now check if the annotation's metadata is our metadata
             if is_torchtyping_annotation:
                 for metadata in all_metadata:
