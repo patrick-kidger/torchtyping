@@ -1,6 +1,10 @@
 <h1 align='center'>torchtyping</h1>
 <h2 align='center'>Type annotations for a tensor's shape, dtype, names, ...</h2>
 
+*Welcome! For new projects I now recommend using my newer [jaxtyping](https://github.com/google/jaxtyping) project instead. It supports PyTorch, doesn't actually depend on JAX, and unlike TorchTyping it is compatible with static type checkers. :)*
+
+---
+
 Turn this:
 ```python
 def batch_outer_product(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -23,8 +27,6 @@ def batch_outer_product(x:   TensorType["batch", "x_channels"],
 Bye-bye bugs! Say hello to enforced, clear documentation of your code.
 
 If (like me) you find yourself littering your code with comments like `# x has shape (batch, hidden_state)` or statements like `assert x.shape == y.shape` , just to keep track of what shape everything is, **then this is for you.**
-
-*If you use JAX instead of PyTorch, then see [jaxtyping](https://github.com/google/jaxtyping).*
 
 ---
 
