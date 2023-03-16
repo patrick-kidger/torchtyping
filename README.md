@@ -1,7 +1,7 @@
 <h1 align='center'>torchtyping</h1>
 <h2 align='center'>Type annotations for a tensor's shape, dtype, names, ...</h2>
 
-*Welcome! For new projects I now recommend using my newer [jaxtyping](https://github.com/google/jaxtyping) project instead. It supports PyTorch, doesn't actually depend on JAX, and unlike TorchTyping it is compatible with static type checkers. :)*
+*Welcome! For new projects I now **strongly** recommend using my newer [jaxtyping](https://github.com/google/jaxtyping) project instead. It supports PyTorch, doesn't actually depend on JAX, and unlike TorchTyping it is compatible with static type checkers. :)*
 
 ---
 
@@ -36,7 +36,9 @@ If (like me) you find yourself littering your code with comments like `# x has s
 pip install torchtyping
 ```
 
-Requires Python 3.7+ and PyTorch 1.7.0+.
+Requires Python >=3.7 and PyTorch >=1.7.0.
+
+If using [`typeguard`](https://github.com/agronholm/typeguard) then it must be a version <3.0.0.
 
 ## Usage
 
