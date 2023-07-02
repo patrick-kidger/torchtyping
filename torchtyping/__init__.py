@@ -7,7 +7,7 @@ from .tensor_details import (
     TensorDetail,
 )
 
-from .tensor_type import TensorType
+from .tensor_type import TensorType, TensorTypeMixin
 from .typechecker import patch_typeguard
 
 __version__ = "0.1.4"

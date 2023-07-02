@@ -1,9 +1,8 @@
 import inspect
 import sys
-import torch
 import typeguard
 
-from .tensor_details import _Dim, _no_name, ShapeDetail
+from .tensor_details import _Dim, _no_name, ShapeDetail, TensorLike
 from .tensor_type import _AnnotatedType
 
 from typing import Any, Dict, List, Tuple
@@ -11,9 +10,9 @@ from typing import Any, Dict, List, Tuple
 # get_args is available in python version 3.8
 # get_type_hints with include_extras parameter is available in 3.9 PEP 593.
 if sys.version_info >= (3, 9):
-    from typing import get_type_hints, get_args, Type
+    from typing import get_type_hints, get_args
 else:
-    from typing_extensions import get_type_hints, get_args, Type
+    from typing_extensions import get_type_hints, get_args
 
 
 # TYPEGUARD PATCHER
@@ -60,7 +59,7 @@ def _to_string(name, detail_reprs: List[str]) -> str:
 
 
 def _check_tensor(
-    argname: str, value: Any, origin: Type[torch.Tensor], metadata: Dict[str, Any]
+    argname: str, value: Any, origin: TensorLike, metadata: Dict[str, Any]
 ):
     details = metadata["details"]
     if not isinstance(value, origin) or any(
@@ -69,7 +68,7 @@ def _check_tensor(
         expected_string = _to_string(
             metadata["cls_name"], [repr(detail) for detail in details]
         )
-        if isinstance(value, torch.Tensor):
+        if isinstance(value, TensorLike):
             given_string = _to_string(
                 metadata["cls_name"], [detail.tensor_repr(value) for detail in details]
             )
@@ -253,7 +252,7 @@ def _check_memo(memo):
             dims.append(_Dim(name=dim.name, size=size))
         detail = detail.update(dims=tuple(dims))
         _check_tensor(
-            argname, value, torch.Tensor, {"cls_name": cls_name, "details": [detail]}
+            argname, value, TensorLike, {"cls_name": cls_name, "details": [detail]}
         )
 
 
@@ -274,7 +273,7 @@ def patch_typeguard():
                 "name_to_size",
                 "name_to_shape",
             )
-            value_info: List[Tuple[str, torch.Tensor, str, Dict[str, Any]]]
+            value_info: List[Tuple[str, TensorLike, str, Dict[str, Any]]]
             name_to_size: Dict[str, int]
             name_to_shape: Dict[str, Tuple[int]]
 
@@ -298,11 +297,9 @@ def patch_typeguard():
                 and hasattr(memo, "value_info")
                 and isinstance(expected_type, _AnnotatedType)
             )
-            # Now check if it's annotating a tensor
+            # Grab the base class
             if is_torchtyping_annotation:
                 base_cls, *all_metadata = get_args(expected_type)
-                if not issubclass(base_cls, torch.Tensor):
-                    is_torchtyping_annotation = False
             # Now check if the annotation's metadata is our metadata
             if is_torchtyping_annotation:
                 for metadata in all_metadata:

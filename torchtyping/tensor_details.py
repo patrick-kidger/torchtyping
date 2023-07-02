@@ -4,10 +4,47 @@ import abc
 import collections
 import torch
 
-from typing import Optional, Union
+from typing import Optional, Union, runtime_checkable, Protocol, Tuple, Any
 
 
 ellipsis = type(...)
+
+
+# Define a Protocol (PEP 544) class to represent "tensor-like" objects
+# These are objects which support the interface given below
+@runtime_checkable
+class TensorLike(Protocol):
+    @property
+    def dtype(self) -> torch.dtype:
+        pass
+
+    # leave the layout definition open because tensor-like classes are likely
+    # to extend it with new storage types
+    @property
+    def layout(self) -> Any:
+        pass
+
+    @property
+    def names(self) -> Tuple[str, ...]:
+        pass
+
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        pass
+
+    def is_floating_point(self) -> bool:
+        pass
+
+
+class MyTensor:
+    def __init__(self):
+        self.dtype = torch.float32
+        self.layout = "very special"
+        self.names = (None, None)
+        self.shape = (1, 1)
+
+    def is_floating_point(self):
+        return self.dtype == torch.float32
 
 
 class TensorDetail(metaclass=abc.ABCMeta):
@@ -16,12 +53,12 @@ class TensorDetail(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def check(self, tensor: torch.Tensor) -> bool:
+    def check(self, tensor: TensorLike) -> bool:
         raise NotImplementedError
 
     @classmethod
     @abc.abstractmethod
-    def tensor_repr(cls, tensor: torch.Tensor) -> str:
+    def tensor_repr(cls, tensor: TensorLike) -> str:
         raise NotImplementedError
 
 
@@ -69,7 +106,7 @@ class ShapeDetail(TensorDetail):
             out += ", is_named"
         return out
 
-    def check(self, tensor: torch.Tensor) -> bool:
+    def check(self, tensor: TensorLike) -> bool:
         self_names = [self_dim.name for self_dim in self.dims]
         self_shape = [self_dim.size for self_dim in self.dims]
 
@@ -103,7 +140,7 @@ class ShapeDetail(TensorDetail):
         return True
 
     @classmethod
-    def tensor_repr(cls, tensor: torch.Tensor) -> str:
+    def tensor_repr(cls, tensor: TensorLike) -> str:
         dims = []
         check_names = any(name is not None for name in tensor.names)
         for name, size in zip(tensor.names, tensor.shape):
@@ -133,11 +170,11 @@ class DtypeDetail(TensorDetail):
     def __repr__(self) -> str:
         return repr(self.dtype)
 
-    def check(self, tensor: torch.Tensor) -> bool:
+    def check(self, tensor: TensorLike) -> bool:
         return self.dtype == tensor.dtype
 
     @classmethod
-    def tensor_repr(cls, tensor: torch.Tensor) -> str:
+    def tensor_repr(cls, tensor: TensorLike) -> str:
         return repr(cls(dtype=tensor.dtype))
 
 
@@ -149,11 +186,11 @@ class LayoutDetail(TensorDetail):
     def __repr__(self) -> str:
         return repr(self.layout)
 
-    def check(self, tensor: torch.Tensor) -> bool:
+    def check(self, tensor: TensorLike) -> bool:
         return self.layout == tensor.layout
 
     @classmethod
-    def tensor_repr(cls, tensor: torch.Tensor) -> str:
+    def tensor_repr(cls, tensor: TensorLike) -> str:
         return repr(cls(layout=tensor.layout))
 
 
@@ -161,11 +198,11 @@ class _FloatDetail(TensorDetail):
     def __repr__(self) -> str:
         return "is_float"
 
-    def check(self, tensor: torch.Tensor) -> bool:
+    def check(self, tensor: TensorLike) -> bool:
         return tensor.is_floating_point()
 
     @classmethod
-    def tensor_repr(cls, tensor: torch.Tensor) -> str:
+    def tensor_repr(cls, tensor: TensorLike) -> str:
         return "is_float" if tensor.is_floating_point() else ""
 
 
@@ -177,11 +214,11 @@ class _NamedTensorDetail(TensorDetail):
     def __repr__(self) -> str:
         raise RuntimeError
 
-    def check(self, tensor: torch.Tensor) -> bool:
+    def check(self, tensor: TensorLike) -> bool:
         raise RuntimeError
 
     @classmethod
-    def tensor_repr(cls, tensor: torch.Tensor) -> str:
+    def tensor_repr(cls, tensor: TensorLike) -> str:
         raise RuntimeError
 
 
