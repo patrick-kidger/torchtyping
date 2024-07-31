@@ -34,7 +34,11 @@ class _TensorTypeMeta(type(torch.Tensor)):
         return isinstance(obj, cls.base_cls)
 
 
-class TensorTypeMixin(metaclass=_TensorTypeMeta):
+# Inherit from torch.Tensor so that IDEs are happy to find methods on functions
+# annotated as TensorTypes.
+class TensorType(torch.Tensor, metaclass=_TensorTypeMeta):
+    base_cls = torch.Tensor
+
     def __new__(cls, *args, **kwargs) -> NoReturn:
         raise RuntimeError(f"Class {cls.__name__} cannot be instantiated.")
 
@@ -169,9 +173,3 @@ class TensorTypeMixin(metaclass=_TensorTypeMeta):
                 {"__torchtyping__": True, "details": details, "cls_name": cls.__name__}
             ),
         ]
-
-
-# Inherit from torch.Tensor so that IDEs are happy to find methods on functions
-# annotated as TensorTypes.
-class TensorType(torch.Tensor, TensorTypeMixin):
-    base_cls = torch.Tensor
