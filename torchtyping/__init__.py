@@ -10,4 +10,4 @@ from .tensor_details import (
 from .tensor_type import TensorType
 from .typechecker import patch_typeguard
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
