@@ -14,7 +14,9 @@ from .tensor_details import (
 )
 from .utils import frozendict
 
-from typing import Any, NoReturn
+from typing import Any, NoReturn, Generic, TypeVarTuple, Unpack
+
+Ts = TypeVarTuple("Ts")
 
 # Annotated is available in python version 3.9 (PEP 593)
 if sys.version_info >= (3, 9):
@@ -36,7 +38,7 @@ class _TensorTypeMeta(type(torch.Tensor)):
 
 # Inherit from torch.Tensor so that IDEs are happy to find methods on functions
 # annotated as TensorTypes.
-class TensorType(torch.Tensor, metaclass=_TensorTypeMeta):
+class TensorType(torch.Tensor, Generic[Unpack[Ts]], metaclass=_TensorTypeMeta):
     base_cls = torch.Tensor
 
     def __new__(cls, *args, **kwargs) -> NoReturn:
